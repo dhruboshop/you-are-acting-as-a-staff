@@ -16,6 +16,19 @@ subprojects { subproject ->
     subproject.plugins.withId("com.android.library") {
         if (subproject.name == "image_gallery_saver") {
             subproject.android.namespace = "com.fluttercandies.image_gallery_saver"
+            def patchManifest = subproject.tasks.register("patchImageGallerySaverManifest") {
+                doLast {
+                    def manifestFile = subproject.file("src/main/AndroidManifest.xml")
+                    if (manifestFile.exists()) {
+                        manifestFile.text = manifestFile.text.replaceAll(/\\s+package="[^"]*"/, "")
+                    }
+                }
+            }
+            subproject.tasks.configureEach { task ->
+                if (task.name.startsWith("process") && task.name.endsWith("Manifest")) {
+                    task.dependsOn(patchManifest)
+                }
+            }
         }
     }
 }
