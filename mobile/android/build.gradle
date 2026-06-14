@@ -12,6 +12,13 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
+subprojects { subproject ->
+    subproject.plugins.withId("com.android.library") {
+        if (subproject.name == "image_gallery_saver") {
+            subproject.android.namespace = "com.fluttercandies.image_gallery_saver"
+        }
+    }
+}
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
