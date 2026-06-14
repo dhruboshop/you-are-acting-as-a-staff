@@ -64,7 +64,7 @@ class BirthdayCampaignNotifier extends StateNotifier<SmartCampaignState> {
 }
 
 final festivalCampaignProvider = StateNotifierProvider<FestivalCampaignNotifier, FestivalCampaignState>((ref) {
-  return FestivalCampaignNotifier(ref);
+  return FestivalCampaignNotifier();
 });
 
 class FestivalCampaignState {
@@ -80,8 +80,7 @@ class FestivalCampaignState {
 }
 
 class FestivalCampaignNotifier extends StateNotifier<FestivalCampaignState> {
-  FestivalCampaignNotifier(this._ref) : super(const FestivalCampaignState(recipientCount: 10));
-  final Ref _ref;
+  FestivalCampaignNotifier() : super(const FestivalCampaignState(recipientCount: 10));
   void selectFestival(Festival festival) => state = state.copyWith(selectedFestival: festival, message: 'Wishing you a joyful ${festival.name} from Radha Jewels.');
   void updateMessage(String message) => state = state.copyWith(message: message);
 }
