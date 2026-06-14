@@ -1,0 +1,28 @@
+name: Render Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - Supabase Migrations
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Trigger Render deploy hook
+        shell: bash
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RENDER_DEPLOY_HOOK_URL:-}" ]; then
+            echo "Missing RENDER_DEPLOY_HOOK_URL secret"
+            exit 1
+          fi
+          curl --fail --request POST "$RENDER_DEPLOY_HOOK_URL"

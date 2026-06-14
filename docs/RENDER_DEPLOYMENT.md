@@ -24,7 +24,17 @@ Screenshot placeholder: `docs/screenshots/render-new-web-service.png`
 
 Add every value from `.env.example`. Use Supabase hosted database values. Do not paste secrets into code.
 
-## 3. Health Check
+## 3. Deploy Hook
+
+1. In Render, open the backend service.
+2. Open Settings.
+3. Create a Deploy Hook.
+4. Copy the hook URL.
+5. Add it to GitHub Actions secrets as `RENDER_DEPLOY_HOOK_URL`.
+
+GitHub Actions triggers this hook after Supabase migrations pass.
+
+## 4. Health Check
 
 Set health check path:
 

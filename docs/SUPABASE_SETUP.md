@@ -21,10 +21,13 @@ Screenshot placeholder: `docs/screenshots/supabase-api-settings.png`
 
 ## 3. Run Migrations
 
-1. Open SQL Editor.
-2. Paste `supabase/migrations/001_initial_schema.sql`.
-3. Click Run.
+Migrations are deployed from GitHub Actions. Do not paste SQL manually.
+
+1. Add the Supabase GitHub secrets listed in `docs/GITOPS_DEPLOYMENT.md`.
+2. Push to `main`.
+3. Open GitHub Actions.
+4. Confirm `GitOps Deploy` or `Supabase Migrations` finishes successfully.
 
 ## 4. Optional Seed
 
-After signing in once, copy your user ID from Authentication > Users. Replace the UUID in `supabase/seed.sql`, then run it in SQL Editor.
+Seed data is optional and should not be run in production. For development-only seed data, create a migration or a controlled script and commit it to Git.
