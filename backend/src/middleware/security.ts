@@ -14,7 +14,7 @@ export function applySecurity(app: Express) {
     contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false
   }));
   app.use(cors({
-    origin: env.NODE_ENV === "production" ? [env.API_BASE_URL] : true,
+    origin: env.NODE_ENV === "production" && env.API_BASE_URL ? [env.API_BASE_URL] : true,
     credentials: false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   }));

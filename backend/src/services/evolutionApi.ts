@@ -1,14 +1,15 @@
-import { env } from "../config/env.js";
+import { getEvolutionConfig } from "../config/env.js";
 import { HttpError } from "../utils/http.js";
 
 type EvolutionResponse<T> = T & { error?: string; message?: string };
 
 async function evolutionFetch<T>(path: string, init: RequestInit = {}): Promise<EvolutionResponse<T>> {
-  const response = await fetch(`${env.EVOLUTION_API_URL}${path}`, {
+  const { apiUrl, apiKey } = getEvolutionConfig();
+  const response = await fetch(`${apiUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      apikey: env.EVOLUTION_API_KEY,
+      apikey: apiKey,
       ...(init.headers ?? {})
     }
   });

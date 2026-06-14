@@ -1,6 +1,6 @@
 import { Router } from "express";
 import QRCode from "qrcode";
-import { env } from "../config/env.js";
+import { getPublicApiBaseUrl } from "../config/env.js";
 import { query, queryOne } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler, HttpError } from "../utils/http.js";
@@ -79,7 +79,7 @@ router.get("/:id/qr", asyncHandler(async (req, res) => {
     [id, req.ownerUserId]
   );
   if (!shop) throw new HttpError(404, "Shop not found");
-  const registrationUrl = `${env.API_BASE_URL}/register/${shop.id}`;
+  const registrationUrl = `${getPublicApiBaseUrl()}/register/${shop.id}`;
   const png = await QRCode.toDataURL(registrationUrl, { margin: 2, width: 1024 });
   res.json({ registrationUrl, pngDataUrl: png });
 }));
