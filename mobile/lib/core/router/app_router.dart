@@ -22,6 +22,7 @@ import '../../features/profile/screens/settings_screen.dart';
 import '../../features/profile/screens/subscription_screen.dart';
 import '../../features/qr/screens/qr_fullscreen_screen.dart';
 import '../../features/qr/screens/qr_screen.dart';
+import '../../features/whatsapp/screens/connect_whatsapp_screen.dart';
 import '../../shared/widgets/lp_bottom_nav.dart';
 import 'route_names.dart';
 
@@ -34,6 +35,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: RouteNames.googleLogin, builder: (context, state) => const GoogleLoginScreen()),
       GoRoute(path: RouteNames.businessSetup, builder: (context, state) => const BusinessSetupScreen()),
       GoRoute(path: RouteNames.themeSelection, builder: (context, state) => const ThemeSelectionScreen()),
+      GoRoute(path: RouteNames.connectWhatsapp, builder: (context, state) => const ConnectWhatsappScreen()),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [

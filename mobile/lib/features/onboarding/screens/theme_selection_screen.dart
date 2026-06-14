@@ -27,7 +27,7 @@ class _ThemeSelectionScreenState extends ConsumerState<ThemeSelectionScreen> {
     if (selected == null) return;
     ref.read(onboardingStateProvider.notifier).setTheme(selected);
     await ref.read(onboardingStateProvider.notifier).submit();
-    if (mounted) context.go(RouteNames.dashboard);
+    if (mounted) context.go(RouteNames.connectWhatsapp);
   }
 
   @override

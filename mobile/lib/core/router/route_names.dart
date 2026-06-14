@@ -4,6 +4,7 @@ class RouteNames {
   static const googleLogin = '/auth/google';
   static const businessSetup = '/onboarding/business-setup';
   static const themeSelection = '/onboarding/theme';
+  static const connectWhatsapp = '/onboarding/connect-whatsapp';
   static const dashboard = '/dashboard';
   static const qrCode = '/dashboard/qr';
   static const qrFullscreen = '/dashboard/qr/fullscreen';

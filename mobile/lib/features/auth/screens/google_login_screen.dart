@@ -16,7 +16,7 @@ class GoogleLoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(googleSignInProvider);
     ref.listen(googleSignInProvider, (_, next) {
-      if (next is AsyncData && !next.isLoading) context.go(RouteNames.dashboard);
+      if (next is AsyncData && !next.isLoading) context.go(RouteNames.connectWhatsapp);
     });
     return Scaffold(
       backgroundColor: AppColors.white,

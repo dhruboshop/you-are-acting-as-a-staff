@@ -41,7 +41,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
     } else if (business == null) {
       context.go(RouteNames.businessSetup);
     } else {
-      context.go(RouteNames.dashboard);
+      context.go(RouteNames.connectWhatsapp);
     }
   }
 
