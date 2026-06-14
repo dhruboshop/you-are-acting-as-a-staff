@@ -8,14 +8,24 @@ import '../config/app_config.dart';
 class ApiClient {
   ApiClient({http.Client? httpClient}) : _http = httpClient ?? http.Client();
 
+  static const _requestTimeout = Duration(seconds: 10);
+
   final http.Client _http;
 
   Future<Map<String, String>> _headers() async {
-    final token = Supabase.instance.client.auth.currentSession?.accessToken;
+    final token = _accessToken();
     return {
       'content-type': 'application/json',
       if (token != null) 'authorization': 'Bearer $token',
     };
+  }
+
+  String? _accessToken() {
+    try {
+      return Supabase.instance.client.auth.currentSession?.accessToken;
+    } catch (_) {
+      return null;
+    }
   }
 
   Uri _uri(String path, [Map<String, String>? query]) {
@@ -23,17 +33,23 @@ class ApiClient {
   }
 
   Future<dynamic> get(String path, {Map<String, String>? query}) async {
-    final response = await _http.get(_uri(path, query), headers: await _headers());
+    final response = await _http
+        .get(_uri(path, query), headers: await _headers())
+        .timeout(_requestTimeout);
     return _decode(response);
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> body) async {
-    final response = await _http.post(_uri(path), headers: await _headers(), body: jsonEncode(body));
+    final response = await _http
+        .post(_uri(path), headers: await _headers(), body: jsonEncode(body))
+        .timeout(_requestTimeout);
     return _decode(response);
   }
 
   Future<dynamic> patch(String path, Map<String, dynamic> body) async {
-    final response = await _http.patch(_uri(path), headers: await _headers(), body: jsonEncode(body));
+    final response = await _http
+        .patch(_uri(path), headers: await _headers(), body: jsonEncode(body))
+        .timeout(_requestTimeout);
     return _decode(response);
   }
 

@@ -5,6 +5,9 @@ class AppConfig {
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   static const googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 
+  static bool get supabaseConfigured => supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+  static bool get googleConfigured => googleClientId.isNotEmpty;
+
   static void validate() {
     final missing = <String>[
       if (supabaseUrl.isEmpty) 'SUPABASE_URL',
