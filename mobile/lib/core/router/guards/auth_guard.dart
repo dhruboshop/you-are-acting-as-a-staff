@@ -1,0 +1,3 @@
+class AuthGuard {
+  const AuthGuard();
+}

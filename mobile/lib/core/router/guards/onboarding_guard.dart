@@ -1,0 +1,3 @@
+class OnboardingGuard {
+  const OnboardingGuard();
+}
