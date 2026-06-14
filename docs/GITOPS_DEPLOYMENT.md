@@ -28,7 +28,7 @@ Only these steps are manual:
 
 1. Create a Supabase project.
 2. Create a Render Web Service connected to this GitHub repository.
-3. Create a Render deploy hook.
+3. Enable Render Auto Deploy on commit.
 4. Add GitHub repository secrets.
 5. Configure Supabase Auth Google provider in the Supabase dashboard.
 
@@ -73,7 +73,6 @@ Add these under GitHub repository Settings > Secrets and variables > Actions.
 SUPABASE_ACCESS_TOKEN
 SUPABASE_PROJECT_ID
 SUPABASE_DB_PASSWORD
-RENDER_DEPLOY_HOOK_URL
 ```
 
 `SUPABASE_PROJECT_ID` is the project ref, visible in the Supabase project URL.
@@ -81,8 +80,6 @@ RENDER_DEPLOY_HOOK_URL
 `SUPABASE_ACCESS_TOKEN` comes from Supabase account access tokens.
 
 `SUPABASE_DB_PASSWORD` is the database password set when the Supabase project was created.
-
-`RENDER_DEPLOY_HOOK_URL` comes from Render service deploy hooks.
 
 ## Render Environment Variables
 
@@ -119,22 +116,10 @@ Full ordered pipeline:
 3. Supabase migration dry run.
 4. Supabase remote schema lint.
 5. Supabase migration deploy.
-6. Render backend deploy hook.
-7. Android debug and release APK builds.
-8. APK artifact upload.
+6. Android debug and release APK builds.
+7. APK artifact upload.
 
-### `supabase-migrations.yml`
-
-Schema-only GitOps workflow. It runs when `supabase/**` changes:
-
-1. Link Supabase project.
-2. Validate pending migrations with `supabase db push --dry-run`.
-3. Lint remote schema.
-4. Deploy migrations with `supabase db push`.
-
-### `render-deploy.yml`
-
-Backend deployment workflow. It runs after `Supabase Migrations` succeeds, or manually via `workflow_dispatch`.
+Render deploys the backend directly from GitHub because Auto Deploy is enabled on the Render Web Service. GitHub Actions does not call Render.
 
 ## Migration Rules
 

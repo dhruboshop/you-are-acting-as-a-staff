@@ -24,15 +24,13 @@ Screenshot placeholder: `docs/screenshots/render-new-web-service.png`
 
 Add every value from `.env.example`. Use Supabase hosted database values. Do not paste secrets into code.
 
-## 3. Deploy Hook
+## 3. Auto Deploy
 
 1. In Render, open the backend service.
 2. Open Settings.
-3. Create a Deploy Hook.
-4. Copy the hook URL.
-5. Add it to GitHub Actions secrets as `RENDER_DEPLOY_HOOK_URL`.
+3. Confirm Auto Deploy is enabled for the `main` branch.
 
-GitHub Actions triggers this hook after Supabase migrations pass.
+Render deploys automatically when GitHub receives a push. GitHub Actions does not trigger Render.
 
 ## 4. Health Check
 
