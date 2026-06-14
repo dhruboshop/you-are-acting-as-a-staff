@@ -32,7 +32,7 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 16),
           ListTile(leading: const Icon(Icons.qr_code_2), title: const Text('QR registration'), subtitle: const Text('Download or share customer QR'), onTap: () => _showQr(context)),
           ListTile(leading: const Icon(Icons.people), title: const Text('Customers'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CustomersScreen(shop: shop, shops: shops)))),
-          ListTile(leading: const Icon(Icons.whatsapp), title: const Text('WhatsApp'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WhatsappScreen(shop: shop, api: api)))),
+          ListTile(leading: const Icon(Icons.chat_bubble_outline), title: const Text('WhatsApp'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WhatsappScreen(shop: shop, api: api)))),
           ListTile(leading: const Icon(Icons.campaign), title: const Text('Campaigns'), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CampaignsScreen(shop: shop, api: api)))),
         ],
       ),

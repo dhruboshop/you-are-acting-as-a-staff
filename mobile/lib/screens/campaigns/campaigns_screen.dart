@@ -25,7 +25,7 @@ class _CampaignsScreenState extends State<CampaignsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           DropdownButtonFormField<String>(
-            value: _template,
+            initialValue: _template,
             decoration: const InputDecoration(labelText: 'Festival template'),
             items: const [
               DropdownMenuItem(value: 'durga_puja', child: Text('Durga Puja')),
