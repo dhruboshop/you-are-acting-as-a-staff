@@ -1,0 +1,54 @@
+name: Code Quality
+
+on:
+  push:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint checks
+        run: npm run lint
+
+      - name: Verify environment variables
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_vars=(
+            PORT
+            NODE_ENV
+            DATABASE_URL
+            SUPABASE_URL
+            SUPABASE_ANON_KEY
+            SUPABASE_SERVICE_ROLE_KEY
+            GOOGLE_CLIENT_ID
+            JWT_SECRET
+            EVOLUTION_API_URL
+            EVOLUTION_API_KEY
+            API_BASE_URL
+            APP_NAME
+            LOG_LEVEL
+          )
+
+          for key in "${required_vars[@]}"; do
+            if ! grep -Eq "^${key}=" .env.example; then
+              echo "Missing ${key} in .env.example"
+              exit 1
+            fi
+          done
+
+      - name: Verify TypeScript compilation
+        run: npm run build

@@ -1,0 +1,14 @@
+{
+  "name": "retail-whatsapp-loyalty",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm --workspace backend run dev",
+    "test": "npm --workspace backend test",
+    "build": "npm --workspace backend run build",
+    "lint": "npm --workspace backend run lint"
+  }
+}

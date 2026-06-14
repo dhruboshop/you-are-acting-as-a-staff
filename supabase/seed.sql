@@ -1,0 +1,12 @@
+-- Optional seed for a development Supabase project.
+-- Replace the UUID below with a real auth.users.id from Supabase Auth after signing in once.
+-- This file is intentionally non-destructive and is not required for production.
+
+-- insert into public.shops (owner_user_id, name, phone, address, settings)
+-- values (
+--   '00000000-0000-0000-0000-000000000000',
+--   'Founder Test Shop',
+--   '+919999999999',
+--   'Kolkata',
+--   '{"currency":"INR","pointsLabel":"Points"}'
+-- );
