@@ -21,9 +21,25 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       ...(init.headers ?? {})
     }
   });
-  const body = await response.json().catch(() => ({}));
+  const rawBody = await response.text();
+  let body: Record<string, unknown> = {};
+  if (rawBody) {
+    try {
+      body = JSON.parse(rawBody) as Record<string, unknown>;
+    } catch {
+      body = {
+        error: rawBody.toLowerCase().includes("<!doctype html") || rawBody.toLowerCase().includes("<html")
+          ? `Backend returned an HTML error page with status ${response.status}. Please try again after the service is live.`
+          : rawBody.replace(/\s+/g, " ").trim().slice(0, 280)
+      };
+    }
+  }
   if (!response.ok) {
-    const message = body.error ?? body.message ?? "Request failed";
+    const message = typeof body.error === "string"
+      ? body.error
+      : typeof body.message === "string"
+        ? body.message
+        : "Request failed";
     console.error("API request failed", {
       requestUrl,
       status: response.status,

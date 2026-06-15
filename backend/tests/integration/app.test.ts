@@ -132,6 +132,7 @@ describe("app", () => {
       .post(`/api/public/shops/${crypto.randomUUID()}/customers`)
       .send({ name: "A", whatsappNumber: "bad", consent: false });
     expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
   });
 
   it("creates a WhatsApp connection and returns pairing details", async () => {
@@ -202,8 +203,36 @@ describe("app", () => {
       .send({ shopId });
 
     expect(response.status).toBe(502);
+    expect(response.body.success).toBe(false);
     expect(response.body.error).toBe("Evolution API is unreachable");
-    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(3);
+  });
+
+  it("sanitizes HTML 502 responses from Evolution", async () => {
+    const shopId = crypto.randomUUID();
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({ id: shopId });
+    vi.mocked(global.fetch).mockResolvedValue(
+      new Response("<!DOCTYPE html><title>502</title>", {
+        status: 502,
+        headers: { "content-type": "text/html" }
+      })
+    );
+
+    const response = await request(createApp())
+      .post("/api/whatsapp/connect")
+      .set("Authorization", "Bearer valid-token")
+      .send({ shopId });
+
+    expect(response.status).toBe(502);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toBe("Evolution API returned an HTML error page with status 502. Check the Evolution service health and Render logs.");
+    expect(response.body.error).not.toContain("<!DOCTYPE");
+    expect(response.body.details.body).toBeUndefined();
+    expect(response.body.details.bodyPreview).toBeUndefined();
+    expect(response.body.details.path).toBe("/instance/create");
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(3);
   });
 
   it("surfaces Evolution authentication failures without retrying", async () => {
@@ -219,6 +248,7 @@ describe("app", () => {
       .send({ shopId });
 
     expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
     expect(response.body.error).toBe("Unauthorized");
     expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(1);
   });

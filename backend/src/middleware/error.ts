@@ -10,11 +10,11 @@ export function notFound(req: Request, _res: Response, next: NextFunction) {
 export function errorHandler(err: unknown, _req: Request, res: Response, next: NextFunction) {
   void next;
   if (err instanceof ZodError) {
-    return res.status(400).json({ error: "Validation failed", details: err.issues });
+    return res.status(400).json({ success: false, error: "Validation failed", details: err.issues });
   }
   if (err instanceof HttpError) {
-    return res.status(err.status).json({ error: err.message, details: err.details });
+    return res.status(err.status).json({ success: false, error: err.message, details: err.details });
   }
   logger.error({ err }, "Unhandled error");
-  return res.status(500).json({ error: "Internal server error" });
+  return res.status(500).json({ success: false, error: "Internal server error" });
 }

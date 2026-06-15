@@ -13,8 +13,9 @@ export type EvolutionConnectionStatus =
   | "unknown";
 
 type JsonObject = Record<string, unknown>;
-const evolutionTimeoutMs = 15_000;
-const maxTransientAttempts = 2;
+const evolutionTimeoutMs = 45_000;
+const maxTransientAttempts = 3;
+const upstreamPreviewLength = 280;
 
 export interface EvolutionInstanceResult {
   instanceName: string;
@@ -50,6 +51,58 @@ function readNestedString(source: JsonObject, path: string[]) {
     current = object[key];
   }
   return typeof current === "string" && current.trim().length > 0 ? current.trim() : undefined;
+}
+
+function isHtmlResponse(value: string) {
+  return /<!doctype html|<html|<title>|<\/[a-z][\s\S]*>/i.test(value);
+}
+
+function compactBodyPreview(value: string) {
+  return value.replace(/\s+/g, " ").trim().slice(0, upstreamPreviewLength);
+}
+
+function upstreamFailureMessage(status: number, body: JsonObject, rawBody: string) {
+  const directMessage = readNestedString(body, ["message"]) ?? readNestedString(body, ["error"]);
+  if (directMessage && !isHtmlResponse(directMessage)) {
+    return directMessage;
+  }
+  if (rawBody && isHtmlResponse(rawBody)) {
+    return `Evolution API returned an HTML error page with status ${status}. Check the Evolution service health and Render logs.`;
+  }
+  return `Evolution API request failed with status ${status}`;
+}
+
+function upstreamFailureDetails(status: number, path: string, body: JsonObject, rawBody: string) {
+  return {
+    upstream: "evolution-api",
+    status,
+    path,
+    body: rawBody && isHtmlResponse(rawBody) ? undefined : body,
+    bodyPreview: rawBody && !isHtmlResponse(rawBody) ? compactBodyPreview(rawBody) : undefined,
+    contentType: typeof body.contentType === "string" ? body.contentType : undefined
+  };
+}
+
+function findNestedString(source: unknown, keys: string[]): string | undefined {
+  if (typeof source === "string" && source.trim()) return source.trim();
+  if (!source || typeof source !== "object") return undefined;
+  if (Array.isArray(source)) {
+    for (const item of source) {
+      const result = findNestedString(item, keys);
+      if (result) return result;
+    }
+    return undefined;
+  }
+  const object = source as JsonObject;
+  for (const key of keys) {
+    const value = object[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  for (const value of Object.values(object)) {
+    const result = findNestedString(value, keys);
+    if (result) return result;
+  }
+  return undefined;
 }
 
 function normalizeStatus(value: string | undefined): EvolutionConnectionStatus {
@@ -147,21 +200,22 @@ async function evolutionFetch<T extends JsonObject>(path: string, init: RequestI
   }
 
   const rawBody = await response.text();
+  const contentType = response.headers.get("content-type") ?? undefined;
   let body: JsonObject = {};
   if (rawBody) {
     try {
       body = toObject(JSON.parse(rawBody) as unknown);
     } catch {
-      body = { message: rawBody };
+      body = { message: isHtmlResponse(rawBody) ? undefined : compactBodyPreview(rawBody), contentType };
     }
   }
 
   if (!response.ok) {
-    const message =
-      readNestedString(body, ["message"]) ??
-      readNestedString(body, ["error"]) ??
-      `Evolution API request failed with status ${response.status}`;
-    throw new HttpError(response.status >= 500 ? 502 : response.status, message, body);
+    throw new HttpError(
+      response.status >= 500 ? 502 : response.status,
+      upstreamFailureMessage(response.status, body, rawBody),
+      upstreamFailureDetails(response.status, path, body, rawBody)
+    );
   }
 
   return body as T;
@@ -169,14 +223,30 @@ async function evolutionFetch<T extends JsonObject>(path: string, init: RequestI
 
 export async function createInstance(shopId: string): Promise<EvolutionInstanceResult> {
   const instanceName = createInstanceName(shopId);
-  const raw = await evolutionFetch("/instance/create", {
-    method: "POST",
-    body: JSON.stringify({
-      instanceName,
-      qrcode: true,
-      integration: "WHATSAPP-BAILEYS"
-    })
-  });
+  let raw: JsonObject;
+  try {
+    raw = await evolutionFetch("/instance/create", {
+      method: "POST",
+      body: JSON.stringify({
+        instanceName,
+        qrcode: true,
+        integration: "WHATSAPP-BAILEYS"
+      })
+    });
+  } catch (error) {
+    if (error instanceof HttpError && [400, 403, 409].includes(error.status)) {
+      const details = toObject(error.details);
+      const body = toObject(details.body);
+      const message = `${error.message} ${JSON.stringify(body)}`.toLowerCase();
+      if (message.includes("already") || message.includes("exist")) {
+        raw = { instanceName, reused: true, upstreamMessage: error.message };
+      } else {
+        throw error;
+      }
+    } else {
+      throw error;
+    }
+  }
   return { instanceName, raw };
 }
 
@@ -188,8 +258,9 @@ export async function getPairingCode(instanceName: string): Promise<EvolutionPai
     pairingCode:
       readNestedString(raw, ["pairingCode"]) ??
       readNestedString(raw, ["pairing_code"]) ??
-      readNestedString(raw, ["code"]),
-    qrCode: raw.qrcode ?? raw.qr ?? raw.base64,
+      readNestedString(raw, ["code"]) ??
+      findNestedString(raw, ["pairingCode", "pairing_code", "code"]),
+    qrCode: raw.qrcode ?? raw.qr ?? raw.base64 ?? findNestedString(raw, ["qrcode", "qr", "base64"]),
     raw
   };
 }
