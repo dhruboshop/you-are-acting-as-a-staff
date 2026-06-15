@@ -7,16 +7,29 @@ import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { getShops, getWhatsAppStatus, type Shop, type WhatsAppConnectionStatus } from "@/lib/api";
+import {
+  createCampaign,
+  getShops,
+  getWhatsAppStatus,
+  sendCampaign,
+  type Shop,
+  type WhatsAppConnectionStatus
+} from "@/lib/api";
 import { festivals } from "@/lib/demo-data";
 
 const variants = [
-  "Hi {name}, wishing you a joyful festival season from Radha Jewels. Visit us this week for something special.",
-  "Dear {name}, celebrate with Radha Jewels. We have a small festive surprise waiting for you.",
-  "{name}, may this season bring happiness to your home. Thank you for being part of Radha Jewels."
+  "Hi {{customerName}}, wishing you a joyful festival season from {{shopName}}. Visit us this week for something special.",
+  "Dear {{customerName}}, celebrate with {{shopName}}. We have a small festive surprise waiting for you.",
+  "{{customerName}}, may this season bring happiness to your home. Thank you for being part of {{shopName}}."
 ];
 
 const campaignTypes = ["Birthday", "Anniversary", "Festival", "Win-back"];
+const templateKeyByType = {
+  Birthday: "birthday",
+  Anniversary: "anniversary",
+  Festival: "festival",
+  "Win-back": "winback"
+} as const;
 
 export default function CampaignsPage() {
   const [type, setType] = useState("Birthday");
@@ -25,6 +38,8 @@ export default function CampaignsPage() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [whatsAppStatus, setWhatsAppStatus] = useState<WhatsAppConnectionStatus>("unknown");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     getShops()
@@ -39,6 +54,35 @@ export default function CampaignsPage() {
   }, []);
 
   const canQueue = Boolean(shop && (whatsAppStatus === "connected" || whatsAppStatus === "open"));
+  const selectedTemplateKey = templateKeyByType[type as keyof typeof templateKeyByType];
+
+  async function approveAndQueue() {
+    if (!shop) {
+      setError("Create your shop before sending campaigns.");
+      return;
+    }
+    if (!canQueue) {
+      setError("Connect WhatsApp before sending campaigns.");
+      return;
+    }
+    setError("");
+    setSuccess("");
+    setIsSending(true);
+    try {
+      const created = await createCampaign({
+        shopId: shop.id,
+        templateKey: selectedTemplateKey,
+        title: `${type} Campaign`,
+        message
+      });
+      const result = await sendCampaign(created.campaign.id);
+      setSuccess(`Campaign sent to ${result.sent} customer${result.sent === 1 ? "" : "s"}. Failed: ${result.failed}.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not send campaign");
+    } finally {
+      setIsSending(false);
+    }
+  }
 
   return (
     <AppShell active="Campaigns">
@@ -48,9 +92,11 @@ export default function CampaignsPage() {
         {error ? (
           <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             <p>{error}</p>
-            <Button asChild className="mt-3" size="sm" variant="secondary">
-              <Link href="/login">Login again</Link>
-            </Button>
+          </Card>
+        ) : null}
+        {success ? (
+          <Card className="mt-5 border-[#10B981]/30 bg-[#10B981]/10 p-4 text-sm text-[#047857]">
+            <p>{success}</p>
           </Card>
         ) : null}
         {!shop ? (
@@ -109,7 +155,9 @@ export default function CampaignsPage() {
           </div>
         ) : null}
         <div className="safe-bottom mt-6 space-y-3">
-          <Button className="w-full" disabled={!canQueue}>Approve & Queue</Button>
+          <Button className="w-full" disabled={!canQueue || isSending} onClick={approveAndQueue}>
+            {isSending ? "Sending..." : "Approve & Send"}
+          </Button>
           <Button className="w-full" variant="secondary">Save Template</Button>
         </div>
       </section>

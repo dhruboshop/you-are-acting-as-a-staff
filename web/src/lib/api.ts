@@ -221,3 +221,34 @@ export async function disconnectWhatsApp(input: { shopId: string; deleteInstance
     body: JSON.stringify(input)
   });
 }
+
+export type Campaign = {
+  id: string;
+  shop_id: string;
+  template_key: "birthday" | "anniversary" | "festival" | "winback";
+  title: string;
+  message: string;
+  target: "all" | "loyalty_members";
+  status: string;
+  sent_count?: number;
+  failed_count?: number;
+};
+
+export async function createCampaign(input: {
+  shopId: string;
+  templateKey: "birthday" | "anniversary" | "festival" | "winback";
+  title: string;
+  message: string;
+  target?: "all" | "loyalty_members";
+}) {
+  return apiFetch<{ campaign: Campaign }>("/api/campaigns", {
+    method: "POST",
+    body: JSON.stringify({ ...input, target: input.target ?? "all" })
+  });
+}
+
+export async function sendCampaign(campaignId: string) {
+  return apiFetch<{ campaign: Campaign; sent: number; failed: number }>(`/api/campaigns/${encodeURIComponent(campaignId)}/send`, {
+    method: "POST"
+  });
+}

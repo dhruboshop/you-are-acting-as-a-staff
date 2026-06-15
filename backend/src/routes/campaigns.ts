@@ -22,6 +22,12 @@ function assertCampaignAllowed(merchantStatus?: MerchantStatus) {
   }
 }
 
+function normalizeWhatsappRecipient(value: string) {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  return digits;
+}
+
 router.get("/templates", asyncHandler(async (_req, res) => {
   res.json({ templates: campaignTemplates });
 }));
@@ -93,26 +99,27 @@ router.post("/:id/send", asyncHandler(async (req, res) => {
     let failed = 0;
     for (const customer of customerResult.rows as Array<{ id: string; name: string; whatsapp_number: string }>) {
       const message = renderTemplate(campaign.message, campaign.shop_name, customer.name);
+      const recipient = normalizeWhatsappRecipient(customer.whatsapp_number);
       try {
-        await sendText(campaign.instance_name, customer.whatsapp_number, message);
+        await sendText(campaign.instance_name, recipient, message);
         await client.query(
           "insert into campaign_logs (campaign_id, customer_id, whatsapp_number, status, sent_at) values ($1, $2, $3, 'sent', now())",
-          [id, customer.id, customer.whatsapp_number]
+          [id, customer.id, recipient]
         );
         sent += 1;
       } catch (error) {
         await client.query(
           "insert into campaign_logs (campaign_id, customer_id, whatsapp_number, status, error_message) values ($1, $2, $3, 'failed', $4)",
-          [id, customer.id, customer.whatsapp_number, error instanceof Error ? error.message : "Unknown error"]
+          [id, customer.id, recipient, error instanceof Error ? error.message : "Unknown error"]
         );
         const retryCount = Number(campaign.retry_count ?? 0);
         const maxRetries = Number(campaign.max_retries ?? 1);
         if (retryCount < maxRetries) {
           try {
-            await sendText(campaign.instance_name, customer.whatsapp_number, message);
+            await sendText(campaign.instance_name, recipient, message);
             await client.query(
               "insert into campaign_logs (campaign_id, customer_id, whatsapp_number, status, sent_at) values ($1, $2, $3, 'sent', now())",
-              [id, customer.id, customer.whatsapp_number]
+              [id, customer.id, recipient]
             );
             sent += 1;
             continue;
