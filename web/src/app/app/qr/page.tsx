@@ -2,6 +2,7 @@
 
 import { Download, Maximize2, Printer, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,12 @@ export default function QrPage() {
               <p className="mt-2 text-sm text-muted-foreground">Scan for birthday and festival offers</p>
             </>
           ) : (
-            <p className="mt-5 text-sm text-muted-foreground">Create a shop first, then this page will generate your customer registration QR.</p>
+            <div className="mt-5 space-y-3">
+              <p className="text-sm text-muted-foreground">Create a shop first, then this page will generate your customer registration QR.</p>
+              <Button asChild>
+                <Link href="/onboarding/shop">Create Shop</Link>
+              </Button>
+            </div>
           )}
         </Card>
         <div className="mt-6 grid grid-cols-2 gap-3">

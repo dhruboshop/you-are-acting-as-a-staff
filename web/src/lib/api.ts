@@ -16,7 +16,14 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body.error ?? body.message ?? "Request failed");
+    const message = body.error ?? body.message ?? "Request failed";
+    if (response.status === 401 && typeof message === "string" && message.toLowerCase().includes("token")) {
+      await supabase?.auth.signOut();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login?error=session_expired";
+      }
+    }
+    throw new Error(message);
   }
   return body as T;
 }

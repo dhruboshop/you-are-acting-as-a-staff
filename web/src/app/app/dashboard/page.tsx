@@ -1,13 +1,13 @@
 "use client";
 
-import { CalendarHeart, MessageCircle, Send, Users } from "lucide-react";
+import { CalendarHeart, MessageCircle, Send, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { StatCard } from "@/components/app/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCustomers, getShops, type Customer, type Shop } from "@/lib/api";
+import { getCustomers, getShops, getWhatsAppStatus, type Customer, type Shop, type WhatsAppConnectionStatus } from "@/lib/api";
 
 function statusLabel(status: Shop["merchant_status"]) {
   if (status === "ACTIVE") return "Active";
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [whatsAppStatus, setWhatsAppStatus] = useState<WhatsAppConnectionStatus>("unknown");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -32,10 +33,14 @@ export default function DashboardPage() {
         setShop(activeShop);
         if (!activeShop?.id) return;
         localStorage.setItem("lp_active_shop_id", activeShop.id);
-        const result = await getCustomers({ shopId: activeShop.id, pageSize: 3 });
+        const [customerResult, whatsAppResult] = await Promise.all([
+          getCustomers({ shopId: activeShop.id, pageSize: 3 }),
+          getWhatsAppStatus(activeShop.id).catch(() => ({ status: "unknown" as WhatsAppConnectionStatus }))
+        ]);
         if (!isMounted) return;
-        setCustomers(result.customers);
-        setTotalCustomers(result.total);
+        setCustomers(customerResult.customers);
+        setTotalCustomers(customerResult.total);
+        setWhatsAppStatus(whatsAppResult.status);
       })
       .catch((caught) => {
         if (!isMounted) return;
@@ -58,14 +63,23 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold">{shop?.name ?? "LoyaltyPilot"}</h1>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <div className="rounded-full bg-[#DCF8C6] px-3 py-1 text-xs font-semibold text-[#128C4A]">WhatsApp ready</div>
+            <div className={`rounded-full px-3 py-1 text-xs font-semibold ${whatsAppStatus === "connected" || whatsAppStatus === "open" ? "bg-[#DCF8C6] text-[#128C4A]" : "bg-amber-100 text-amber-700"}`}>
+              {whatsAppStatus === "connected" || whatsAppStatus === "open" ? "WhatsApp connected" : "WhatsApp not connected"}
+            </div>
             <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">{statusLabel(shop?.merchant_status)}</div>
             <Link href="/logout" className="text-xs font-semibold text-muted-foreground underline">
               Logout
             </Link>
           </div>
         </div>
-        {error ? <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</Card> : null}
+        {error ? (
+          <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            <p>{error}</p>
+            <Button asChild className="mt-3" size="sm" variant="secondary">
+              <Link href="/login">Login again</Link>
+            </Button>
+          </Card>
+        ) : null}
         {!isLoading && !shop ? (
           <Card className="mt-5 p-4 text-sm text-muted-foreground">
             No shop is connected to this account yet. Create your shop to generate a customer QR.
@@ -83,18 +97,34 @@ export default function DashboardPage() {
           <StatCard label="Campaigns Sent" value={String(shop?.total_campaigns ?? 0)} icon={Send} />
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Button asChild>
-            <Link href="/app/qr">Show QR</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/app/campaigns">Send Campaign</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/app/customers">Customers</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/app/qr">Add Customer</Link>
-          </Button>
+          {shop ? (
+            <>
+              <Button asChild>
+                <Link href="/app/qr">Show QR</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/app/campaigns">Send Campaign</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/app/customers">Customers</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/onboarding/whatsapp">
+                  <Smartphone className="h-5 w-5" />
+                  WhatsApp
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild>
+                <Link href="/onboarding/shop">Create Shop</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/login">Login again</Link>
+              </Button>
+            </>
+          )}
         </div>
         <h2 className="mt-8 text-lg font-semibold">Recent Customers</h2>
         <div className="mt-3 space-y-3">
