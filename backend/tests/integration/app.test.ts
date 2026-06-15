@@ -165,6 +165,36 @@ describe("app", () => {
     expect(vi.mocked(global.fetch).mock.calls[0]?.[0]).toBe("http://localhost:8081/instance/create");
   });
 
+  it("does not misclassify base64 QR payloads as pairing code", async () => {
+    const shopId = crypto.randomUUID();
+    const base64Qr = "iVBORw0KGgo" + "A".repeat(900);
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({ id: shopId })
+      .mockResolvedValueOnce({
+        id: crypto.randomUUID(),
+        shop_id: shopId,
+        instance_name: `shop_${shopId.replaceAll("-", "_")}`,
+        phone_number: null,
+        status: "connecting",
+        connected_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ instance: { instanceName: "created" } }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ code: base64Qr }), { status: 200 }));
+
+    const response = await request(createApp())
+      .post("/api/whatsapp/connect")
+      .set("Authorization", "Bearer valid-token")
+      .send({ shopId });
+
+    expect(response.status).toBe(201);
+    expect(response.body.pairingCode).toBeNull();
+    expect(response.body.qrCode).toBe(base64Qr);
+  });
+
   it("rejects invalid WhatsApp connect payloads", async () => {
     const response = await request(createApp())
       .post("/api/whatsapp/connect")

@@ -17,6 +17,7 @@ import {
 
 const connectedStatuses: WhatsAppConnectionStatus[] = ["open", "connected"];
 const disconnectedStatuses: WhatsAppConnectionStatus[] = ["not_connected", "close", "disconnected", "deleted", "failed", "unknown"];
+const qrTextMaxLength = 2953;
 
 function readableStatus(status: WhatsAppConnectionStatus) {
   switch (status) {
@@ -40,12 +41,41 @@ function readableStatus(status: WhatsAppConnectionStatus) {
   }
 }
 
-function extractQrValue(value: unknown) {
-  if (typeof value === "string" && value.trim()) return value;
+type QrRenderValue =
+  | { kind: "image"; src: string }
+  | { kind: "text"; value: string };
+
+function normalizeImageSource(value: string) {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("data:image/")) return trimmed;
+  if (/^[A-Za-z0-9+/=]+$/.test(trimmed) && trimmed.length > 500) {
+    return `data:image/png;base64,${trimmed}`;
+  }
+  return null;
+}
+
+function isPairingCode(value: string | null) {
+  return Boolean(value && value.trim().length > 0 && value.trim().length <= 80);
+}
+
+function extractQrValue(value: unknown): QrRenderValue | null {
+  if (typeof value === "string" && value.trim()) {
+    const imageSource = normalizeImageSource(value);
+    if (imageSource) return { kind: "image", src: imageSource };
+    return value.length <= qrTextMaxLength ? { kind: "text", value } : null;
+  }
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const object = value as Record<string, unknown>;
-  const candidates = [object.code, object.base64, object.qr, object.qrcode];
-  return candidates.find((candidate): candidate is string => typeof candidate === "string" && candidate.trim().length > 0) ?? null;
+  const imageCandidates = [object.qrcode, object.qr, object.base64];
+  for (const candidate of imageCandidates) {
+    if (typeof candidate !== "string" || !candidate.trim()) continue;
+    const imageSource = normalizeImageSource(candidate);
+    if (imageSource) return { kind: "image", src: imageSource };
+    if (candidate.length <= qrTextMaxLength) return { kind: "text", value: candidate };
+  }
+  const codeCandidates = [object.pairingCode, object.pairing_code, object.code];
+  const code = codeCandidates.find((candidate): candidate is string => typeof candidate === "string" && isPairingCode(candidate));
+  return code ? { kind: "text", value: code } : null;
 }
 
 export default function WhatsAppConnectPage() {
@@ -65,6 +95,7 @@ export default function WhatsAppConnectPage() {
   const isConnected = connectedStatuses.includes(status);
   const isPolling = status === "connecting";
   const qrValue = useMemo(() => extractQrValue(qrCode), [qrCode]);
+  const visiblePairingCode = isPairingCode(pairingCode) ? pairingCode : null;
 
   const stopPolling = useCallback(() => {
     if (pollTimerRef.current) {
@@ -74,13 +105,20 @@ export default function WhatsAppConnectPage() {
   }, []);
 
   const refreshStatus = useCallback(async (currentShopId: string) => {
-    const result = await getWhatsAppStatus(currentShopId);
-    setStatus(result.status);
-    setConnection(result.connection);
-    if (connectedStatuses.includes(result.status) || disconnectedStatuses.includes(result.status)) {
-      stopPolling();
+    try {
+      const result = await getWhatsAppStatus(currentShopId);
+      setStatus(result.status);
+      setConnection(result.connection);
+      setError("");
+      if (connectedStatuses.includes(result.status) || disconnectedStatuses.includes(result.status)) {
+        stopPolling();
+      }
+      return result.status;
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Could not refresh WhatsApp status";
+      setError(message);
+      throw new Error(message);
     }
-    return result.status;
   }, [stopPolling]);
 
   const startPolling = useCallback((currentShopId: string) => {
@@ -144,8 +182,9 @@ export default function WhatsAppConnectPage() {
       const result = await connectWhatsApp({ shopId });
       setConnection(result.connection);
       setStatus(result.connection.status);
-      setPairingCode(result.pairingCode);
+      setPairingCode(isPairingCode(result.pairingCode) ? result.pairingCode : null);
       setQrCode(result.qrCode);
+      setShowQr(Boolean(result.qrCode));
       startPolling(shopId);
     } catch (caught) {
       setStatus("failed");
@@ -199,7 +238,7 @@ export default function WhatsAppConnectPage() {
               {connection?.phone_number ? `Connected number: ${connection.phone_number}` : "You can now collect customers and send campaigns."}
             </p>
           </div>
-        ) : pairingCode || qrValue ? (
+        ) : visiblePairingCode || qrValue ? (
           <div className="min-h-64 text-center">
             <div className="mb-5 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
               {isPolling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
@@ -207,12 +246,22 @@ export default function WhatsAppConnectPage() {
             </div>
             {showQr && qrValue ? (
               <div className="flex justify-center">
-                <QRCodeSVG value={qrValue} size={216} />
+                {qrValue.kind === "image" ? (
+                  // Evolution returns a data URL/base64 QR image; Next Image cannot optimize this source.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={qrValue.src} alt="WhatsApp pairing QR code" className="h-[216px] w-[216px] rounded-md object-contain" />
+                ) : (
+                  <QRCodeSVG value={qrValue.value} size={216} />
+                )}
               </div>
             ) : (
               <>
                 <p className="text-sm font-medium text-muted-foreground">Pairing Code</p>
-                <p className="mt-3 select-all break-words text-5xl font-bold tracking-widest">{pairingCode ?? "Open QR"}</p>
+                {visiblePairingCode ? (
+                  <p className="mt-3 select-all break-words text-5xl font-bold tracking-widest">{visiblePairingCode}</p>
+                ) : (
+                  <p className="mt-3 text-sm text-muted-foreground">Use the QR code to connect WhatsApp.</p>
+                )}
               </>
             )}
             <p className="mt-4 break-all text-xs text-muted-foreground">Instance: {connection?.instance_name ?? "pending"}</p>
@@ -248,7 +297,7 @@ export default function WhatsAppConnectPage() {
           <>
             <Button className="w-full" size="lg" onClick={startConnection} disabled={isConnecting || isLoadingShop}>
               {isConnecting ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
-              {pairingCode || qrValue ? "Regenerate Pairing Code" : "Generate Pairing Code"}
+              {visiblePairingCode || qrValue ? "Regenerate Pairing Code" : "Generate Pairing Code"}
             </Button>
             {qrValue ? (
               <Button variant="secondary" className="w-full" onClick={() => setShowQr((value) => !value)}>
@@ -256,7 +305,14 @@ export default function WhatsAppConnectPage() {
               </Button>
             ) : null}
             {shopId ? (
-              <Button variant="secondary" className="w-full" onClick={() => refreshStatus(shopId)} disabled={isLoadingShop}>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => {
+                  void refreshStatus(shopId).catch(() => undefined);
+                }}
+                disabled={isLoadingShop}
+              >
                 Check Status
               </Button>
             ) : null}

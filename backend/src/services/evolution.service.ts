@@ -105,6 +105,23 @@ function findNestedString(source: unknown, keys: string[]): string | undefined {
   return undefined;
 }
 
+function looksLikeBase64Image(value: string | undefined) {
+  if (!value) return false;
+  return value.startsWith("data:image/") || (/^[A-Za-z0-9+/=]+$/.test(value) && value.length > 500);
+}
+
+function normalizePairingCode(value: string | undefined) {
+  if (!value || looksLikeBase64Image(value)) return undefined;
+  const trimmed = value.trim();
+  return trimmed.length <= 80 ? trimmed : undefined;
+}
+
+function normalizeQrCode(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return undefined;
+  if (looksLikeBase64Image(value)) return value.trim();
+  return value.length <= 2953 ? value.trim() : undefined;
+}
+
 function normalizeStatus(value: string | undefined): EvolutionConnectionStatus {
   switch (value?.toLowerCase()) {
     case "open":
@@ -256,11 +273,15 @@ export async function getPairingCode(instanceName: string): Promise<EvolutionPai
   return {
     instanceName,
     pairingCode:
-      readNestedString(raw, ["pairingCode"]) ??
-      readNestedString(raw, ["pairing_code"]) ??
-      readNestedString(raw, ["code"]) ??
-      findNestedString(raw, ["pairingCode", "pairing_code", "code"]),
-    qrCode: raw.qrcode ?? raw.qr ?? raw.base64 ?? findNestedString(raw, ["qrcode", "qr", "base64"]),
+      normalizePairingCode(readNestedString(raw, ["pairingCode"])) ??
+      normalizePairingCode(readNestedString(raw, ["pairing_code"])) ??
+      normalizePairingCode(readNestedString(raw, ["code"])) ??
+      normalizePairingCode(findNestedString(raw, ["pairingCode", "pairing_code", "code"])),
+    qrCode:
+      normalizeQrCode(raw.qrcode) ??
+      normalizeQrCode(raw.qr) ??
+      normalizeQrCode(raw.base64) ??
+      normalizeQrCode(findNestedString(raw, ["qrcode", "qr", "base64", "code"])),
     raw
   };
 }
