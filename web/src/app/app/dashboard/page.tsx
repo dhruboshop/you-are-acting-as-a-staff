@@ -1,14 +1,13 @@
 "use client";
 
-import { CalendarHeart, CheckCircle2, Clock, MessageCircle, Send, Users, XCircle } from "lucide-react";
+import { CalendarHeart, MessageCircle, Send, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { StatCard } from "@/components/app/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getShops, type Shop } from "@/lib/api";
-import { demoCustomers } from "@/lib/demo-data";
+import { getCustomers, getShops, type Customer, type Shop } from "@/lib/api";
 
 function statusLabel(status: Shop["merchant_status"]) {
   if (status === "ACTIVE") return "Active";
@@ -19,14 +18,35 @@ function statusLabel(status: Shop["merchant_status"]) {
 
 export default function DashboardPage() {
   const [shop, setShop] = useState<Shop | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getShops().then(({ shops }) => {
-      setShop(shops[0] ?? null);
-      if (shops[0]?.id) {
-        localStorage.setItem("lp_active_shop_id", shops[0].id);
-      }
-    });
+    let isMounted = true;
+    getShops()
+      .then(async ({ shops }) => {
+        if (!isMounted) return;
+        const activeShop = shops[0] ?? null;
+        setShop(activeShop);
+        if (!activeShop?.id) return;
+        localStorage.setItem("lp_active_shop_id", activeShop.id);
+        const result = await getCustomers({ shopId: activeShop.id, pageSize: 3 });
+        if (!isMounted) return;
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+      })
+      .catch((caught) => {
+        if (!isMounted) return;
+        setError(caught instanceof Error ? caught.message : "Could not load dashboard");
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -45,18 +65,22 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+        {error ? <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</Card> : null}
+        {!isLoading && !shop ? (
+          <Card className="mt-5 p-4 text-sm text-muted-foreground">
+            No shop is connected to this account yet. Create your shop to generate a customer QR.
+          </Card>
+        ) : null}
         {shop?.merchant_status === "EXPIRED" || shop?.merchant_status === "BLOCKED" ? (
           <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             Campaign sending is paused for this shop. Customer QR and customer list still work.
           </Card>
         ) : null}
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <StatCard label="Total Customers" value={String(shop?.total_customers ?? 0)} icon={Users} />
-          <StatCard label="New Customers" value="12" icon={CheckCircle2} />
-          <StatCard label="Birthdays Today" value="3" icon={CalendarHeart} />
+          <StatCard label="Total Customers" value={String(shop?.total_customers ?? totalCustomers)} icon={Users} />
+          <StatCard label="New Customers" value={String(totalCustomers)} icon={Users} />
+          <StatCard label="Birthdays Today" value="0" icon={CalendarHeart} />
           <StatCard label="Campaigns Sent" value={String(shop?.total_campaigns ?? 0)} icon={Send} />
-          <StatCard label="Messages Queued" value="18" icon={Clock} />
-          <StatCard label="Messages Failed" value="2" icon={XCircle} />
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Button asChild>
@@ -68,11 +92,18 @@ export default function DashboardPage() {
           <Button asChild variant="secondary">
             <Link href="/app/customers">Customers</Link>
           </Button>
-          <Button variant="secondary">Add Customer</Button>
+          <Button asChild variant="secondary">
+            <Link href="/app/qr">Add Customer</Link>
+          </Button>
         </div>
         <h2 className="mt-8 text-lg font-semibold">Recent Customers</h2>
         <div className="mt-3 space-y-3">
-          {demoCustomers.map((customer) => (
+          {customers.length === 0 ? (
+            <Card className="p-4 text-sm text-muted-foreground">
+              No customers yet. Share your QR code with the first customer to start collecting registrations.
+            </Card>
+          ) : null}
+          {customers.map((customer) => (
             <Card key={customer.id} className="flex items-center gap-3 p-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                 {customer.name.slice(0, 2).toUpperCase()}
