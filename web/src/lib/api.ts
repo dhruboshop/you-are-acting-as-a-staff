@@ -28,6 +28,8 @@ export type Shop = {
   address?: string;
   logo_url?: string;
   settings?: Record<string, unknown>;
+  merchant_status?: "TRIAL" | "ACTIVE" | "EXPIRED" | "BLOCKED";
+  trial_ends_at?: string | null;
   total_customers?: number;
   total_campaigns?: number;
   total_loyalty_members?: number;
@@ -76,7 +78,7 @@ export async function getShops() {
 
   const { data, error } = await supabase
     .from("shops")
-    .select("id,name,phone,address,logo_url,settings")
+    .select("id,name,phone,address,logo_url,settings,merchant_status,trial_ends_at")
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -121,7 +123,7 @@ export async function createShop(input: { name: string; phone?: string; address?
       address: input.address ?? null,
       settings: input.settings ?? {}
     })
-    .select("id,name,phone,address,logo_url,settings")
+    .select("id,name,phone,address,logo_url,settings,merchant_status,trial_ends_at")
     .single();
 
   if (error) {
@@ -143,7 +145,7 @@ export async function updateShop(id: string, input: { name?: string; phone?: str
     .update(input)
     .eq("id", id)
     .eq("owner_user_id", session.user.id)
-    .select("id,name,phone,address,logo_url,settings")
+    .select("id,name,phone,address,logo_url,settings,merchant_status,trial_ends_at")
     .single();
 
   if (error) {

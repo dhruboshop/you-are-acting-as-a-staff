@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   customerCreateSchema,
+  campaignSchema,
   loyaltySchema,
   shopCreateSchema,
   whatsappConnectSchema,
@@ -30,6 +31,20 @@ describe("validators", () => {
 
   it("renders campaign placeholders", () => {
     expect(renderTemplate("Hi {{customerName}} from {{shopName}}", "Bose Stores", "Anita")).toBe("Hi Anita from Bose Stores");
+  });
+
+  it("limits campaigns to MVP activation types", () => {
+    const base = {
+      shopId: crypto.randomUUID(),
+      title: "Customer greeting",
+      message: "Hi {{customerName}}, visit {{shopName}} soon.",
+      target: "all" as const
+    };
+    expect(campaignSchema.parse({ ...base, templateKey: "birthday" }).templateKey).toBe("birthday");
+    expect(campaignSchema.parse({ ...base, templateKey: "anniversary" }).templateKey).toBe("anniversary");
+    expect(campaignSchema.parse({ ...base, templateKey: "festival" }).templateKey).toBe("festival");
+    expect(campaignSchema.parse({ ...base, templateKey: "winback" }).templateKey).toBe("winback");
+    expect(() => campaignSchema.parse({ ...base, templateKey: "promotional" })).toThrow();
   });
 
   it("validates WhatsApp integration payloads", () => {

@@ -15,4 +15,4 @@ export const demoCustomers = [
   { id: "3", name: "Meera Nair", whatsapp_number: "+919876543213", birthday: "1988-03-20", anniversary: "2015-12-01", feedback_rating: 5, feedback_text: "Best shop in the area." }
 ];
 
-export const festivals = ["Diwali", "Eid", "Christmas", "New Year", "Holi", "Durga Puja"];
+export const festivals = ["Diwali", "Eid", "Christmas", "New Year", "Holi", "Durga Puja", "Valentine's Day", "Rose Day", "Chocolate Day"];

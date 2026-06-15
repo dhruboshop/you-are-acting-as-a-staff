@@ -14,6 +14,8 @@ const variants = [
   "{name}, may this season bring happiness to your home. Thank you for being part of Radha Jewels."
 ];
 
+const campaignTypes = ["Birthday", "Anniversary", "Festival", "Win-back"];
+
 export default function CampaignsPage() {
   const [type, setType] = useState("Birthday");
   const [message, setMessage] = useState(variants[0]);
@@ -25,7 +27,7 @@ export default function CampaignsPage() {
         <h1 className="text-3xl font-bold">Campaigns</h1>
         <p className="mt-2 text-muted-foreground">Generate, approve, and queue WhatsApp messages.</p>
         <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-          {["Birthday", "Anniversary", "Festival", "Feedback", "Promotional"].map((item) => (
+          {campaignTypes.map((item) => (
             <button key={item} onClick={() => setType(item)} className={`shrink-0 rounded-full border px-3 py-2 text-sm ${type === item ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
               {item}
             </button>

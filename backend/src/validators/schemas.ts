@@ -34,10 +34,11 @@ export const loyaltySchema = z.object({
 
 export const campaignSchema = z.object({
   shopId: z.string().uuid(),
-  templateKey: z.enum(["durga_puja", "diwali", "eid", "christmas", "new_year"]),
+  templateKey: z.enum(["birthday", "anniversary", "festival", "winback"]),
   title: z.string().trim().min(2).max(140),
   message: z.string().trim().min(2).max(1000),
-  target: z.enum(["all", "loyalty_members"]).default("all")
+  target: z.enum(["all", "loyalty_members"]).default("all"),
+  scheduledAt: z.string().datetime().optional().nullable()
 });
 
 export const whatsappConnectSchema = z.object({

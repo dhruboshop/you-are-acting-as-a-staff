@@ -10,6 +10,13 @@ import { Card } from "@/components/ui/card";
 import { getShops, type Shop } from "@/lib/api";
 import { demoCustomers } from "@/lib/demo-data";
 
+function statusLabel(status: Shop["merchant_status"]) {
+  if (status === "ACTIVE") return "Active";
+  if (status === "EXPIRED") return "Trial expired";
+  if (status === "BLOCKED") return "Blocked";
+  return "Trial";
+}
+
 export default function DashboardPage() {
   const [shop, setShop] = useState<Shop | null>(null);
 
@@ -31,12 +38,18 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold">{shop?.name ?? "LoyaltyPilot"}</h1>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <div className="rounded-full bg-[#DCF8C6] px-3 py-1 text-xs font-semibold text-[#128C4A]">WhatsApp open</div>
+            <div className="rounded-full bg-[#DCF8C6] px-3 py-1 text-xs font-semibold text-[#128C4A]">WhatsApp ready</div>
+            <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">{statusLabel(shop?.merchant_status)}</div>
             <Link href="/logout" className="text-xs font-semibold text-muted-foreground underline">
               Logout
             </Link>
           </div>
         </div>
+        {shop?.merchant_status === "EXPIRED" || shop?.merchant_status === "BLOCKED" ? (
+          <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            Campaign sending is paused for this shop. Customer QR and customer list still work.
+          </Card>
+        ) : null}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <StatCard label="Total Customers" value={String(shop?.total_customers ?? 0)} icon={Users} />
           <StatCard label="New Customers" value="12" icon={CheckCircle2} />
