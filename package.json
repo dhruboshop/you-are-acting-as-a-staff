@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "backend"
+    "backend",
+    "web"
   ],
   "scripts": {
     "dev": "npm --workspace backend run dev",
+    "dev:web": "npm --workspace web run dev",
     "start": "npm --workspace backend start",
     "test": "npm --workspace backend test",
     "build": "npm --workspace backend run build",
+    "build:web": "npm --workspace web run build",
+    "typecheck:web": "npm --workspace web run typecheck",
     "lint": "npm --workspace backend run lint"
   }
 }

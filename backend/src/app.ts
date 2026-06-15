@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import campaignRoutes from "./routes/campaigns.js";
 import customerRoutes from "./routes/customers.js";
 import healthRoutes from "./routes/health.js";
+import aiRoutes from "./routes/ai.js";
 import loyaltyRoutes from "./routes/loyalty.js";
 import publicRoutes from "./routes/public.js";
 import shopRoutes from "./routes/shops.js";
@@ -24,6 +25,7 @@ export function createApp() {
   app.use("/api/whatsapp", whatsappRoutes);
   app.use("/api/campaigns", campaignRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/ai", aiRoutes);
   app.use(notFound);
   app.use(errorHandler);
   return app;

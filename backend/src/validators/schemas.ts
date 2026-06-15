@@ -13,6 +13,10 @@ export const shopUpdateSchema = shopCreateSchema.partial();
 export const customerCreateSchema = z.object({
   name: z.string().trim().min(2).max(120),
   whatsappNumber: z.string().trim().regex(/^\+?[1-9]\d{7,14}$/, "Use an E.164-like WhatsApp number"),
+  birthday: z.string().date().optional().nullable(),
+  anniversary: z.string().date().optional().nullable(),
+  feedbackRating: z.number().int().min(1).max(5).optional().nullable(),
+  feedbackText: z.string().trim().max(500).optional().nullable(),
   consent: z.literal(true)
 });
 

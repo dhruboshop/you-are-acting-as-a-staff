@@ -1,11 +1,14 @@
 node_modules/
 dist/
 coverage/
+.next/
+.vercel/
 .env
 .env.*
 !.env.example
 .DS_Store
 *.log
+*.tsbuildinfo
 build/
 .dart_tool/
 .flutter-plugins
