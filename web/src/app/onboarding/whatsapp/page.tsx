@@ -16,7 +16,7 @@ import {
 } from "@/lib/api";
 
 const connectedStatuses: WhatsAppConnectionStatus[] = ["open", "connected"];
-const disconnectedStatuses: WhatsAppConnectionStatus[] = ["not_connected", "close", "disconnected", "deleted", "failed", "unknown"];
+const terminalStatuses: WhatsAppConnectionStatus[] = ["deleted", "failed"];
 const qrTextMaxLength = 2953;
 
 function readableStatus(status: WhatsAppConnectionStatus) {
@@ -91,9 +91,10 @@ export default function WhatsAppConnectPage() {
   const [isLoadingShop, setIsLoadingShop] = useState(true);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isPollingStatus, setIsPollingStatus] = useState(false);
 
   const isConnected = connectedStatuses.includes(status);
-  const isPolling = status === "connecting";
+  const isPolling = isPollingStatus;
   const qrValue = useMemo(() => extractQrValue(qrCode), [qrCode]);
   const visiblePairingCode = isPairingCode(pairingCode) ? pairingCode : null;
 
@@ -102,6 +103,7 @@ export default function WhatsAppConnectPage() {
       window.clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
+    setIsPollingStatus(false);
   }, []);
 
   const refreshStatus = useCallback(async (currentShopId: string) => {
@@ -110,7 +112,10 @@ export default function WhatsAppConnectPage() {
       setStatus(result.status);
       setConnection(result.connection);
       setError("");
-      if (connectedStatuses.includes(result.status) || disconnectedStatuses.includes(result.status)) {
+      if (connectedStatuses.includes(result.status)) {
+        stopPolling();
+        window.setTimeout(() => router.replace("/app/dashboard"), 800);
+      } else if (terminalStatuses.includes(result.status)) {
         stopPolling();
       }
       return result.status;
@@ -119,10 +124,11 @@ export default function WhatsAppConnectPage() {
       setError(message);
       throw new Error(message);
     }
-  }, [stopPolling]);
+  }, [router, stopPolling]);
 
   const startPolling = useCallback((currentShopId: string) => {
     stopPolling();
+    setIsPollingStatus(true);
     pollTimerRef.current = window.setInterval(() => {
       refreshStatus(currentShopId).catch((caught) => {
         setError(caught instanceof Error ? caught.message : "Could not refresh WhatsApp status");
@@ -184,7 +190,7 @@ export default function WhatsAppConnectPage() {
       setStatus(result.connection.status);
       setPairingCode(isPairingCode(result.pairingCode) ? result.pairingCode : null);
       setQrCode(result.qrCode);
-      setShowQr(Boolean(result.qrCode));
+      setShowQr(Boolean(extractQrValue(result.qrCode)));
       startPolling(shopId);
     } catch (caught) {
       setStatus("failed");

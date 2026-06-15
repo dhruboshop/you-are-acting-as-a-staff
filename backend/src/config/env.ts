@@ -17,6 +17,7 @@ const envSchema = z.object({
   JWT_SECRET: optionalString(z.string().min(16)),
   EVOLUTION_API_URL: optionalString(z.string().url()),
   EVOLUTION_API_KEY: optionalString(z.string().min(1)),
+  EVOLUTION_WEBHOOK_SECRET: optionalString(z.string().min(16)),
   GROQ_API_KEY: optionalString(z.string().min(1)),
   API_BASE_URL: optionalString(z.string().url()),
   WEB_APP_URL: optionalString(z.string().url()),
@@ -35,6 +36,7 @@ const fallbackForTests = {
   JWT_SECRET: "test-secret-that-is-long-enough",
   EVOLUTION_API_URL: "http://localhost:8081",
   EVOLUTION_API_KEY: "test-evolution-api-key",
+  EVOLUTION_WEBHOOK_SECRET: "test-evolution-webhook-secret",
   GROQ_API_KEY: "test-groq-api-key",
   API_BASE_URL: "http://localhost:8080",
   WEB_APP_URL: "http://localhost:3000"

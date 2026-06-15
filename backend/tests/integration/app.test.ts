@@ -301,6 +301,59 @@ describe("app", () => {
     expect(response.body.status).toBe("open");
   });
 
+  it("falls back to fetchInstances when connectionState has an unknown shape", async () => {
+    const shopId = crypto.randomUUID();
+    const instanceName = `shop_${shopId.replaceAll("-", "_")}`;
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({ id: shopId })
+      .mockResolvedValueOnce({ instance_name: instanceName, status: "connecting" })
+      .mockResolvedValueOnce({ instance_name: instanceName, status: "open", phone_number: "919876543210", connected_at: new Date().toISOString() });
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ instance: { unexpected: "CONNECTED" } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ name: instanceName, connectionStatus: "open", ownerJid: "919876543210@s.whatsapp.net" }]), { status: 200 }));
+
+    const response = await request(createApp())
+      .get(`/api/whatsapp/status?shopId=${shopId}`)
+      .set("Authorization", "Bearer valid-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe("open");
+    expect(vi.mocked(global.fetch).mock.calls[1]?.[0]).toBe(`http://localhost:8081/instance/fetchInstances?instanceName=${instanceName}`);
+  });
+
+  it("updates WhatsApp connection state from Evolution webhooks", async () => {
+    const instanceName = `shop_${crypto.randomUUID().replaceAll("-", "_")}`;
+    dbMocks.queryOne.mockResolvedValueOnce({
+      id: crypto.randomUUID(),
+      shop_id: crypto.randomUUID(),
+      instance_name: instanceName,
+      phone_number: "919876543210",
+      status: "open",
+      connected_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+
+    const response = await request(createApp())
+      .post("/api/whatsapp/webhook")
+      .set("x-webhook-secret", "test-evolution-webhook-secret")
+      .send({
+        event: "connection.update",
+        instance: instanceName,
+        data: {
+          state: "open",
+          ownerJid: "919876543210@s.whatsapp.net"
+        }
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.status).toBe("open");
+    expect(dbMocks.queryOne.mock.calls[0]?.[0]).toContain("update whatsapp_connections");
+    expect(dbMocks.queryOne.mock.calls[0]?.[1]).toEqual([instanceName, "open", "919876543210"]);
+  });
+
   it("returns not_connected when no WhatsApp connection row exists", async () => {
     const shopId = crypto.randomUUID();
     dbMocks.queryOne

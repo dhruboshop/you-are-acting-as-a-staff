@@ -122,15 +122,25 @@ function normalizeQrCode(value: unknown) {
   return value.length <= 2953 ? value.trim() : undefined;
 }
 
-function normalizeStatus(value: string | undefined): EvolutionConnectionStatus {
-  switch (value?.toLowerCase()) {
+export function normalizeEvolutionStatus(value: string | undefined): EvolutionConnectionStatus {
+  const normalized = value?.toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_");
+  switch (normalized) {
     case "open":
+    case "online":
       return "open";
     case "connected":
+    case "connection_open":
       return "connected";
     case "connecting":
+    case "qrcode":
+    case "qr":
+    case "pairing":
+    case "pairing_code":
       return "connecting";
     case "close":
+    case "closed":
+    case "not_connection":
+    case "not_connected":
       return "close";
     case "disconnected":
       return "disconnected";
@@ -138,8 +148,6 @@ function normalizeStatus(value: string | undefined): EvolutionConnectionStatus {
       return "deleted";
     case "failed":
       return "failed";
-    case "not_connected":
-      return "not_connected";
     default:
       return "unknown";
   }
@@ -221,7 +229,8 @@ async function evolutionFetch<T extends JsonObject>(path: string, init: RequestI
   let body: JsonObject = {};
   if (rawBody) {
     try {
-      body = toObject(JSON.parse(rawBody) as unknown);
+      const parsed = JSON.parse(rawBody) as unknown;
+      body = parsed && typeof parsed === "object" ? parsed as JsonObject : {};
     } catch {
       body = { message: isHtmlResponse(rawBody) ? undefined : compactBodyPreview(rawBody), contentType };
     }
@@ -291,15 +300,74 @@ export async function getConnectionStatus(instanceName: string): Promise<Evoluti
   const raw = await evolutionFetch(`/instance/connectionState/${encoded}`);
   const state =
     readNestedString(raw, ["instance", "state"]) ??
+    readNestedString(raw, ["instance", "status"]) ??
+    readNestedString(raw, ["instance", "connectionStatus"]) ??
+    readNestedString(raw, ["instance", "connection", "state"]) ??
+    readNestedString(raw, ["instance", "connection", "status"]) ??
     readNestedString(raw, ["state"]) ??
-    readNestedString(raw, ["status"]);
+    readNestedString(raw, ["status"]) ??
+    readNestedString(raw, ["connectionStatus"]);
   const phoneNumber =
     readNestedString(raw, ["instance", "owner"]) ??
+    readNestedString(raw, ["instance", "ownerJid"]) ??
+    readNestedString(raw, ["instance", "profilePictureUrl"]) ??
     readNestedString(raw, ["owner"]) ??
+    readNestedString(raw, ["ownerJid"]) ??
     readNestedString(raw, ["phone"]);
+  const status = normalizeEvolutionStatus(state);
+  if (status !== "unknown") {
+    return {
+      instanceName,
+      status,
+      phoneNumber: normalizePhoneNumber(phoneNumber),
+      raw
+    };
+  }
+
+  const fallback = await fetchInstanceStatus(instanceName).catch(() => null);
+  if (fallback) return fallback;
+
   return {
     instanceName,
-    status: normalizeStatus(state),
+    status,
+    phoneNumber: normalizePhoneNumber(phoneNumber),
+    raw
+  };
+}
+
+export async function fetchInstanceStatus(instanceName: string): Promise<EvolutionConnectionStatusResult> {
+  const encoded = encodeURIComponent(instanceName);
+  const raw = await evolutionFetch(`/instance/fetchInstances?instanceName=${encoded}`);
+  const rows = Array.isArray(raw) ? raw : Array.isArray(raw.instances) ? raw.instances : Array.isArray(raw.data) ? raw.data : [raw];
+  const match = rows
+    .map((row) => toObject(row))
+    .find((row) => {
+      const rowName =
+        readNestedString(row, ["name"]) ??
+        readNestedString(row, ["instanceName"]) ??
+        readNestedString(row, ["instance", "instanceName"]) ??
+        readNestedString(row, ["instance", "name"]);
+      return rowName === instanceName;
+    }) ?? toObject(rows[0]);
+
+  const state =
+    readNestedString(match, ["connectionStatus"]) ??
+    readNestedString(match, ["status"]) ??
+    readNestedString(match, ["state"]) ??
+    readNestedString(match, ["instance", "state"]) ??
+    readNestedString(match, ["instance", "status"]) ??
+    readNestedString(match, ["instance", "connectionStatus"]);
+  const phoneNumber =
+    readNestedString(match, ["owner"]) ??
+    readNestedString(match, ["ownerJid"]) ??
+    readNestedString(match, ["number"]) ??
+    readNestedString(match, ["profileName"]) ??
+    readNestedString(match, ["instance", "owner"]) ??
+    readNestedString(match, ["instance", "ownerJid"]);
+
+  return {
+    instanceName,
+    status: normalizeEvolutionStatus(state),
     phoneNumber: normalizePhoneNumber(phoneNumber),
     raw
   };
