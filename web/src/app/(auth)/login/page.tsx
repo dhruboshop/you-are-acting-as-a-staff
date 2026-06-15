@@ -13,13 +13,15 @@ export default function LoginPage() {
   const [configError, setConfigError] = useState(false);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("error")) {
-      return;
-    }
-
     const supabase = createBrowserSupabase();
     if (!supabase) {
       setConfigError(true);
+      return;
+    }
+
+    const error = new URLSearchParams(window.location.search).get("error");
+    const shouldCheckExistingSession = !error || error === "session_missing" || error === "session_expired";
+    if (!shouldCheckExistingSession) {
       return;
     }
 

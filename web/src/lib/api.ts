@@ -5,7 +5,10 @@ import { createBrowserSupabase } from "./supabase";
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const supabase = createBrowserSupabase();
-  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  let session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  if (!session?.access_token && supabase) {
+    session = (await supabase.auth.refreshSession()).data.session;
+  }
   if (!session?.access_token) {
     if (typeof window !== "undefined") {
       window.location.href = "/login?error=session_missing";
