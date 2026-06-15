@@ -13,6 +13,10 @@ export default function LoginPage() {
   const [configError, setConfigError] = useState(false);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("error")) {
+      return;
+    }
+
     const supabase = createBrowserSupabase();
     if (!supabase) {
       setConfigError(true);

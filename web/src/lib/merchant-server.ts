@@ -33,3 +33,14 @@ export async function fetchMerchantShops(accessToken: string): Promise<MerchantS
   const body = (await shopsResponse.json()) as { shops?: MerchantShop[] };
   return body.shops ?? [];
 }
+
+export async function tryFetchMerchantShops(accessToken: string) {
+  try {
+    const shops = await fetchMerchantShops(accessToken);
+    return { shops, error: null as string | null };
+  } catch (caught) {
+    const message = caught instanceof Error ? caught.message : "Unable to load merchant shops";
+    console.error("MERCHANT_SHOP_LOOKUP_FAILED", message);
+    return { shops: [] as MerchantShop[], error: message };
+  }
+}
