@@ -3,13 +3,26 @@
 import { env } from "./env";
 import { createBrowserSupabase } from "./supabase";
 
+async function getServerSessionAccessToken() {
+  if (typeof window === "undefined") return null;
+  const response = await fetch("/auth/session", { cache: "no-store" }).catch(() => null);
+  if (!response?.ok) return null;
+  const body = await response.json().catch(() => null) as { accessToken?: unknown } | null;
+  return typeof body?.accessToken === "string" && body.accessToken ? body.accessToken : null;
+}
+
+function parseJsonBody<T>(rawBody: string) {
+  return (rawBody ? JSON.parse(rawBody) : {}) as T;
+}
+
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const supabase = createBrowserSupabase();
   let session = supabase ? (await supabase.auth.getSession()).data.session : null;
   if (!session?.access_token && supabase) {
     session = (await supabase.auth.refreshSession()).data.session;
   }
-  if (!session?.access_token) {
+  let accessToken = session?.access_token ?? await getServerSessionAccessToken();
+  if (!accessToken) {
     if (typeof window !== "undefined") {
       window.location.href = "/login?error=session_missing";
     }
@@ -25,7 +38,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
         ...(init.headers ?? {})
       }
     });
-  let response = await fetchWithToken(session.access_token);
+  let response = await fetchWithToken(accessToken);
   const rawBody = await response.text();
   let body: Record<string, unknown> = {};
   if (rawBody) {
@@ -52,11 +65,13 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     });
     if (response.status === 401 && typeof message === "string" && message.toLowerCase().includes("token")) {
       const refreshed = supabase ? (await supabase.auth.refreshSession()).data.session : null;
-      if (refreshed?.access_token && refreshed.access_token !== session.access_token) {
-        response = await fetchWithToken(refreshed.access_token);
+      const retryToken = refreshed?.access_token ?? await getServerSessionAccessToken();
+      if (retryToken && retryToken !== accessToken) {
+        accessToken = retryToken;
+        response = await fetchWithToken(accessToken);
         const retryRawBody = await response.text();
         if (response.ok) {
-          return (retryRawBody ? JSON.parse(retryRawBody) : {}) as T;
+          return parseJsonBody<T>(retryRawBody);
         }
       }
       await supabase?.auth.signOut();
