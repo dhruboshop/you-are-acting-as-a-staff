@@ -2,6 +2,7 @@
 
 import { CalendarHeart, MessageCircle, Send, Smartphone, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { StatCard } from "@/components/app/stat-card";
@@ -17,6 +18,7 @@ function statusLabel(status: Shop["merchant_status"]) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [shop, setShop] = useState<Shop | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -31,7 +33,10 @@ export default function DashboardPage() {
         if (!isMounted) return;
         const activeShop = shops[0] ?? null;
         setShop(activeShop);
-        if (!activeShop?.id) return;
+        if (!activeShop?.id) {
+          router.replace("/onboarding/shop");
+          return;
+        }
         localStorage.setItem("lp_active_shop_id", activeShop.id);
         const [customerResult, whatsAppResult] = await Promise.all([
           getCustomers({ shopId: activeShop.id, pageSize: 3 }),
@@ -52,7 +57,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [router]);
 
   return (
     <AppShell active="Home">
@@ -80,11 +85,7 @@ export default function DashboardPage() {
             </Button>
           </Card>
         ) : null}
-        {!isLoading && !shop ? (
-          <Card className="mt-5 p-4 text-sm text-muted-foreground">
-            No shop is connected to this account yet. Create your shop to generate a customer QR.
-          </Card>
-        ) : null}
+        {!isLoading && !shop ? <Card className="mt-5 p-4 text-sm text-muted-foreground">Taking you to shop setup...</Card> : null}
         {shop?.merchant_status === "EXPIRED" || shop?.merchant_status === "BLOCKED" ? (
           <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             Campaign sending is paused for this shop. Customer QR and customer list still work.
@@ -115,16 +116,7 @@ export default function DashboardPage() {
                 </Link>
               </Button>
             </>
-          ) : (
-            <>
-              <Button asChild>
-                <Link href="/onboarding/shop">Create Shop</Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/login">Login again</Link>
-              </Button>
-            </>
-          )}
+          ) : null}
         </div>
         <h2 className="mt-8 text-lg font-semibold">Recent Customers</h2>
         <div className="mt-3 space-y-3">
