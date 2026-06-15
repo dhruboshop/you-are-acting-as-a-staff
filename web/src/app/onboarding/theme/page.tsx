@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getShops, updateShop } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const themes = [
@@ -17,6 +18,30 @@ const themes = [
 export default function ThemePage() {
   const router = useRouter();
   const [selected, setSelected] = useState("luxury");
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function saveTheme() {
+    setError("");
+    setIsSaving(true);
+    try {
+      const activeShopId = localStorage.getItem("lp_active_shop_id");
+      const shops = activeShopId ? [] : (await getShops()).shops;
+      const shopId = activeShopId ?? shops[0]?.id;
+      if (!shopId) {
+        router.push("/onboarding/shop");
+        return;
+      }
+      await updateShop(shopId, { settings: { themeKey: selected } });
+      localStorage.setItem("lp_active_shop_id", shopId);
+      router.push("/onboarding/whatsapp");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not save theme");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-5 py-6">
       <div className="h-1 rounded-full bg-muted">
@@ -38,15 +63,14 @@ export default function ThemePage() {
         ))}
       </div>
       <div className="mt-auto safe-bottom pt-8">
+        {error ? <p className="mb-3 text-sm text-destructive">{error}</p> : null}
         <Button
           className="w-full"
           size="lg"
-          onClick={() => {
-            localStorage.setItem("lp_theme", selected);
-            router.push("/onboarding/whatsapp");
-          }}
+          onClick={saveTheme}
+          disabled={isSaving}
         >
-          Continue
+          {isSaving ? "Saving..." : "Continue"}
         </Button>
       </div>
     </main>

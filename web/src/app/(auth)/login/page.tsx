@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Chrome, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,17 +9,40 @@ import { createBrowserSupabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [configError, setConfigError] = useState(false);
+
+  useEffect(() => {
+    const supabase = createBrowserSupabase();
+    if (!supabase) {
+      setConfigError(true);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        router.replace("/auth/route");
+      }
+    });
+  }, [router]);
 
   async function signIn() {
     const supabase = createBrowserSupabase();
     if (!supabase) {
-      router.push("/onboarding/shop");
+      setConfigError(true);
       return;
     }
     const origin = window.location.origin;
+    setIsSigningIn(true);
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${origin}/onboarding/shop` }
+      options: {
+        redirectTo: `${origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "select_account"
+        }
+      }
     });
   }
 
@@ -44,12 +67,14 @@ export default function LoginPage() {
         </Card>
       </div>
       <div className="safe-bottom mt-8 space-y-3">
-        <Button className="w-full" size="lg" onClick={signIn}>
+        {configError ? (
+          <Card className="border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            Supabase Google OAuth is not configured. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+          </Card>
+        ) : null}
+        <Button className="w-full" size="lg" onClick={signIn} disabled={isSigningIn || configError}>
           <Chrome className="h-5 w-5" />
-          Continue with Google
-        </Button>
-        <Button asChild variant="secondary" className="w-full">
-          <Link href="/onboarding/shop">Preview Demo</Link>
+          {isSigningIn ? "Opening Google..." : "Continue with Google"}
         </Button>
       </div>
     </main>

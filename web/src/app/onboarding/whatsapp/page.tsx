@@ -6,15 +6,46 @@ import { CheckCircle2, RefreshCw } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { connectWhatsApp, getShops } from "@/lib/api";
 
 export default function WhatsAppConnectPage() {
   const router = useRouter();
   const [connected, setConnected] = useState(false);
   const [useQr, setUseQr] = useState(false);
+  const [error, setError] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [instanceName, setInstanceName] = useState("loyaltypilot");
 
   useEffect(() => {
-    localStorage.setItem("lp_whatsapp_instance", "demo_instance_001");
+    const activeShopId = localStorage.getItem("lp_active_shop_id");
+    if (activeShopId) {
+      setInstanceName(`lp_${activeShopId.replaceAll("-", "").slice(0, 18)}`);
+    }
   }, []);
+
+  async function startConnection() {
+    setError("");
+    setIsConnecting(true);
+    try {
+      let shopId = localStorage.getItem("lp_active_shop_id");
+      if (!shopId) {
+        const shops = (await getShops()).shops;
+        shopId = shops[0]?.id ?? null;
+      }
+      if (!shopId) {
+        router.push("/onboarding/shop");
+        return;
+      }
+      await connectWhatsApp({ shopId, instanceName });
+      localStorage.setItem("lp_active_shop_id", shopId);
+      localStorage.setItem("lp_whatsapp_instance", instanceName);
+      setConnected(true);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not connect WhatsApp");
+    } finally {
+      setIsConnecting(false);
+    }
+  }
 
   if (connected) {
     return (
@@ -42,19 +73,21 @@ export default function WhatsAppConnectPage() {
       <Card className="mt-8 p-6 text-center">
         {useQr ? (
           <div className="flex justify-center">
-            <QRCodeSVG value="evolution://demo_instance_001" size={216} />
+            <QRCodeSVG value={`evolution://${instanceName}`} size={216} />
           </div>
         ) : (
           <>
             <p className="text-sm font-medium text-muted-foreground">Pairing Code</p>
             <p className="mt-3 select-all text-5xl font-bold tracking-widest">482-913</p>
+            <p className="mt-3 text-xs text-muted-foreground">Instance: {instanceName}</p>
           </>
         )}
       </Card>
       <div className="safe-bottom mt-auto space-y-3 pt-8">
-        <Button className="w-full" size="lg" onClick={() => setConnected(true)}>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        <Button className="w-full" size="lg" onClick={startConnection} disabled={isConnecting}>
           <RefreshCw className="h-5 w-5" />
-          I have connected
+          {isConnecting ? "Creating instance..." : "Create WhatsApp Instance"}
         </Button>
         <Button variant="secondary" className="w-full" onClick={() => setUseQr((value) => !value)}>
           {useQr ? "Use Pairing Code" : "Use QR Instead"}

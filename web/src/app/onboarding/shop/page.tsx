@@ -4,12 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createShop } from "@/lib/api";
 
 export default function ShopSetupPage() {
   const router = useRouter();
-  const [name, setName] = useState("Radha Jewels");
-  const [phone, setPhone] = useState("+919876543210");
-  const [city, setCity] = useState("Mumbai");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-background px-5 py-6">
@@ -23,17 +26,32 @@ export default function ShopSetupPage() {
       </div>
       <form
         className="mt-8 space-y-4"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
-          localStorage.setItem("lp_shop", JSON.stringify({ name, phone, city }));
-          router.push("/onboarding/theme");
+          setError("");
+          setIsSaving(true);
+          try {
+            const { shop } = await createShop({
+              name,
+              phone,
+              address: city,
+              settings: { city }
+            });
+            localStorage.setItem("lp_active_shop_id", shop.id);
+            router.push("/onboarding/theme");
+          } catch (caught) {
+            setError(caught instanceof Error ? caught.message : "Could not create shop");
+          } finally {
+            setIsSaving(false);
+          }
         }}
       >
         <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Business name" required />
         <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="WhatsApp number" required />
         <Input value={city} onChange={(event) => setCity(event.target.value)} placeholder="City" required />
-        <Button className="mt-4 w-full" size="lg" type="submit">
-          Continue
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        <Button className="mt-4 w-full" size="lg" type="submit" disabled={isSaving}>
+          {isSaving ? "Creating..." : "Continue"}
         </Button>
       </form>
     </main>

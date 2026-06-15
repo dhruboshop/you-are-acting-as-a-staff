@@ -1,27 +1,47 @@
+"use client";
+
 import { CalendarHeart, CheckCircle2, Clock, MessageCircle, Send, Users, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { StatCard } from "@/components/app/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { demoCustomers, demoShop } from "@/lib/demo-data";
+import { getShops, type Shop } from "@/lib/api";
+import { demoCustomers } from "@/lib/demo-data";
 
 export default function DashboardPage() {
+  const [shop, setShop] = useState<Shop | null>(null);
+
+  useEffect(() => {
+    getShops().then(({ shops }) => {
+      setShop(shops[0] ?? null);
+      if (shops[0]?.id) {
+        localStorage.setItem("lp_active_shop_id", shops[0].id);
+      }
+    });
+  }, []);
+
   return (
     <AppShell active="Home">
       <section className="px-5 py-6">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Good morning</p>
-            <h1 className="text-3xl font-bold">{demoShop.name}</h1>
+            <h1 className="text-3xl font-bold">{shop?.name ?? "LoyaltyPilot"}</h1>
           </div>
-          <div className="rounded-full bg-[#DCF8C6] px-3 py-1 text-xs font-semibold text-[#128C4A]">WhatsApp open</div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="rounded-full bg-[#DCF8C6] px-3 py-1 text-xs font-semibold text-[#128C4A]">WhatsApp open</div>
+            <Link href="/logout" className="text-xs font-semibold text-muted-foreground underline">
+              Logout
+            </Link>
+          </div>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <StatCard label="Total Customers" value="248" icon={Users} />
+          <StatCard label="Total Customers" value={String(shop?.total_customers ?? 0)} icon={Users} />
           <StatCard label="New Customers" value="12" icon={CheckCircle2} />
           <StatCard label="Birthdays Today" value="3" icon={CalendarHeart} />
-          <StatCard label="Campaigns Sent" value="34" icon={Send} />
+          <StatCard label="Campaigns Sent" value={String(shop?.total_campaigns ?? 0)} icon={Send} />
           <StatCard label="Messages Queued" value="18" icon={Clock} />
           <StatCard label="Messages Failed" value="2" icon={XCircle} />
         </div>

@@ -2,18 +2,24 @@
 
 import { Download, Maximize2, Printer, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { demoShop } from "@/lib/demo-data";
+import { getShops, type Shop } from "@/lib/api";
 import { env } from "@/lib/env";
 
 export default function QrPage() {
-  const registrationUrl = `${env.appUrl}/register/${demoShop.id}`;
+  const [shop, setShop] = useState<Shop | null>(null);
+  const registrationUrl = shop ? `${env.appUrl}/register/${shop.id}` : `${env.appUrl}/auth/route`;
+
+  useEffect(() => {
+    getShops().then(({ shops }) => setShop(shops[0] ?? null));
+  }, []);
 
   async function shareQr() {
     if (navigator.share) {
-      await navigator.share({ title: demoShop.name, text: `Register with ${demoShop.name}`, url: registrationUrl });
+      await navigator.share({ title: shop?.name ?? "LoyaltyPilot", text: `Register with ${shop?.name ?? "our shop"}`, url: registrationUrl });
     }
   }
 
@@ -24,7 +30,7 @@ export default function QrPage() {
         <p className="mt-2 text-muted-foreground">Place this near the counter so customers can register.</p>
         <Card className="mt-6 p-6 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground">LP</div>
-          <h2 className="mt-3 text-xl font-bold">{demoShop.name}</h2>
+          <h2 className="mt-3 text-xl font-bold">{shop?.name ?? "Loading shop..."}</h2>
           <div className="mt-5 flex justify-center">
             <QRCodeSVG value={registrationUrl} size={230} />
           </div>

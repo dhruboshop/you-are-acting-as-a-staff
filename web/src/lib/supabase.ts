@@ -1,11 +1,11 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import { env } from "./env";
 
 export function createBrowserSupabase() {
   if (!env.supabaseUrl || !env.supabaseAnonKey) {
     return null;
   }
-  return createClient(env.supabaseUrl, env.supabaseAnonKey);
+  return createBrowserClient(env.supabaseUrl, env.supabaseAnonKey);
 }

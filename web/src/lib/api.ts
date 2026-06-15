@@ -52,3 +52,14 @@ export async function getShops() {
 export async function createShop(input: { name: string; phone?: string; address?: string; settings?: Record<string, unknown> }) {
   return apiFetch<{ shop: Shop }>("/api/shops", { method: "POST", body: JSON.stringify(input) });
 }
+
+export async function updateShop(id: string, input: { name?: string; phone?: string; address?: string; settings?: Record<string, unknown> }) {
+  return apiFetch<{ shop: Shop }>(`/api/shops/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
+export async function connectWhatsApp(input: { shopId: string; instanceName: string }) {
+  return apiFetch<{ session: unknown; evolution: unknown }>("/api/whatsapp/connect", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
