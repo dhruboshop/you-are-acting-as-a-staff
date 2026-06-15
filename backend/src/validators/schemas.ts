@@ -41,6 +41,14 @@ export const campaignSchema = z.object({
 });
 
 export const whatsappConnectSchema = z.object({
+  shopId: z.string().uuid()
+});
+
+export const whatsappStatusQuerySchema = z.object({
+  shopId: z.string().uuid()
+});
+
+export const whatsappDisconnectSchema = z.object({
   shopId: z.string().uuid(),
-  instanceName: z.string().trim().min(3).max(80).regex(/^[a-zA-Z0-9_-]+$/)
+  deleteInstance: z.boolean().optional().default(false)
 });

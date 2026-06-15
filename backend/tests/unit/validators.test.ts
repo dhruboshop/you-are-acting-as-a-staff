@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { customerCreateSchema, loyaltySchema, shopCreateSchema } from "../../src/validators/schemas.js";
+import {
+  customerCreateSchema,
+  loyaltySchema,
+  shopCreateSchema,
+  whatsappConnectSchema,
+  whatsappDisconnectSchema,
+  whatsappStatusQuerySchema
+} from "../../src/validators/schemas.js";
 import { renderTemplate } from "../../src/services/campaignTemplates.js";
 
 describe("validators", () => {
@@ -23,5 +30,13 @@ describe("validators", () => {
 
   it("renders campaign placeholders", () => {
     expect(renderTemplate("Hi {{customerName}} from {{shopName}}", "Bose Stores", "Anita")).toBe("Hi Anita from Bose Stores");
+  });
+
+  it("validates WhatsApp integration payloads", () => {
+    const shopId = crypto.randomUUID();
+    expect(whatsappConnectSchema.parse({ shopId })).toEqual({ shopId });
+    expect(whatsappStatusQuerySchema.parse({ shopId })).toEqual({ shopId });
+    expect(whatsappDisconnectSchema.parse({ shopId })).toEqual({ shopId, deleteInstance: false });
+    expect(() => whatsappConnectSchema.parse({ shopId: "bad", instanceName: "ignored" })).toThrow();
   });
 });

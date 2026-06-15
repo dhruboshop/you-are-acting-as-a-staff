@@ -4,11 +4,11 @@
 
 Shop-owner login uses Supabase Auth with Google Sign-In. The backend validates the Supabase access token on every protected route with `supabase.auth.getUser(token)`.
 
-WhatsApp connection is separate. Evolution API credentials are backend-only environment variables and are never sent to the Flutter app.
+WhatsApp connection is separate. Evolution API credentials are backend-only environment variables and are never sent to the web app.
 
 ## Authorization
 
-Every owner route joins through `shops.owner_user_id`. A user can only manage shops, customers, loyalty transactions, campaigns, and WhatsApp sessions belonging to their own Supabase user ID.
+Every owner route joins through `shops.owner_user_id`. A user can only manage shops, customers, loyalty transactions, campaigns, and WhatsApp connections belonging to their own Supabase user ID.
 
 Supabase RLS policies are included in `supabase/migrations/001_initial_schema.sql` for direct database safety. The backend should use the Supabase database connection string and should not expose service-role credentials to the app.
 

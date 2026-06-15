@@ -45,6 +45,28 @@ export type Customer = {
   created_at: string;
 };
 
+export type WhatsAppConnectionStatus =
+  | "not_connected"
+  | "connecting"
+  | "connected"
+  | "open"
+  | "close"
+  | "disconnected"
+  | "deleted"
+  | "failed"
+  | "unknown";
+
+export type WhatsAppConnection = {
+  id: string;
+  shop_id: string;
+  instance_name: string;
+  phone_number: string | null;
+  status: WhatsAppConnectionStatus;
+  connected_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export async function getShops() {
   const supabase = createBrowserSupabase();
   const session = supabase ? (await supabase.auth.getSession()).data.session : null;
@@ -131,8 +153,31 @@ export async function updateShop(id: string, input: { name?: string; phone?: str
   return { shop: { ...data, total_customers: 0, total_campaigns: 0, total_loyalty_members: 0 } as Shop };
 }
 
-export async function connectWhatsApp(input: { shopId: string; instanceName: string }) {
-  return apiFetch<{ session: unknown; evolution: unknown }>("/api/whatsapp/connect", {
+export async function connectWhatsApp(input: { shopId: string }) {
+  return apiFetch<{
+    connection: WhatsAppConnection;
+    pairingCode: string | null;
+    qrCode: unknown;
+    evolution: unknown;
+  }>("/api/whatsapp/connect", {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function getWhatsAppStatus(shopId: string) {
+  return apiFetch<{
+    status: WhatsAppConnectionStatus;
+    connection: WhatsAppConnection | null;
+    evolution?: unknown;
+  }>(`/api/whatsapp/status?shopId=${encodeURIComponent(shopId)}`);
+}
+
+export async function disconnectWhatsApp(input: { shopId: string; deleteInstance?: boolean }) {
+  return apiFetch<{
+    status: WhatsAppConnectionStatus;
+    connection: WhatsAppConnection;
+  }>("/api/whatsapp/disconnect", {
     method: "POST",
     body: JSON.stringify(input)
   });

@@ -10,7 +10,7 @@ Retail Loyalty is a low-cost SaaS for 20-50 local shops.
 - Supabase Postgres for data.
 - Evolution API for WhatsApp messaging.
 
-Google login and WhatsApp connection are deliberately separate. A shop owner authenticates with Google through Supabase. A shop connects WhatsApp through Evolution API using a per-shop instance stored in `whatsapp_sessions`.
+Google login and WhatsApp connection are deliberately separate. A shop owner authenticates with Google through Supabase. A shop connects WhatsApp through Evolution API using a per-shop instance stored in `whatsapp_connections`.
 
 ## Data Flow
 

@@ -11,7 +11,7 @@ router.get("/stats", asyncHandler(async (_req, res) => {
     `select
       (select count(*)::int from shops where deleted_at is null) as shops_count,
       (select count(*)::int from customers) as customers_count,
-      (select count(*)::int from shops s join whatsapp_sessions ws on ws.shop_id = s.id where ws.status in ('open', 'connected')) as active_shops`
+      (select count(*)::int from shops s join whatsapp_connections wc on wc.shop_id = s.id where wc.status in ('open', 'connected')) as active_shops`
   );
   res.json({ stats });
 }));

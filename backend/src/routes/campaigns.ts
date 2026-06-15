@@ -2,7 +2,7 @@ import { Router } from "express";
 import { pool, query, queryOne } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import { campaignTemplates, renderTemplate } from "../services/campaignTemplates.js";
-import { sendText } from "../services/evolutionApi.js";
+import { sendText } from "../services/evolution.service.js";
 import { asyncHandler, HttpError } from "../utils/http.js";
 import { shopParam, uuidParam } from "../validators/common.js";
 import { campaignSchema } from "../validators/schemas.js";
@@ -49,16 +49,18 @@ router.post("/:id/send", asyncHandler(async (req, res) => {
   const client = await pool.connect();
   try {
     const campaignResult = await client.query(
-      `select ca.*, s.name as shop_name, ws.instance_name, ws.status as whatsapp_status
+      `select ca.*, s.name as shop_name, wc.instance_name, wc.status as whatsapp_status
        from campaigns ca
        join shops s on s.id = ca.shop_id
-       left join whatsapp_sessions ws on ws.shop_id = s.id
+       left join whatsapp_connections wc on wc.shop_id = s.id
        where ca.id = $1 and s.owner_user_id = $2`,
       [id, req.ownerUserId]
     );
     const campaign = campaignResult.rows[0] as { id: string; shop_id: string; shop_name: string; message: string; target: string; instance_name?: string; whatsapp_status?: string } | undefined;
     if (!campaign) throw new HttpError(404, "Campaign not found");
-    if (!campaign.instance_name || campaign.whatsapp_status === "disconnected") throw new HttpError(400, "Connect WhatsApp before sending");
+    if (!campaign.instance_name || !["open", "connected"].includes(campaign.whatsapp_status ?? "")) {
+      throw new HttpError(400, "Connect WhatsApp before sending");
+    }
 
     const customerResult = await client.query(
       `select id, name, whatsapp_number from customers

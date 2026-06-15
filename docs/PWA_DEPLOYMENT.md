@@ -65,7 +65,7 @@ Required Supabase tables for the PWA:
 - `campaign_messages`
 - `message_templates`
 - `message_variants`
-- `whatsapp_instances`
+- `whatsapp_connections`
 - `campaign_queue`
 
 ## Render Backend
