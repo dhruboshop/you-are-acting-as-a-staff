@@ -16,14 +16,16 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new Error("Google session required");
   }
   const requestUrl = `${env.apiBaseUrl}${path}`;
-  const response = await fetch(requestUrl, {
-    ...init,
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${session.access_token}`,
-      ...(init.headers ?? {})
-    }
-  });
+  const fetchWithToken = (accessToken: string) =>
+    fetch(requestUrl, {
+      ...init,
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${accessToken}`,
+        ...(init.headers ?? {})
+      }
+    });
+  let response = await fetchWithToken(session.access_token);
   const rawBody = await response.text();
   let body: Record<string, unknown> = {};
   if (rawBody) {
@@ -40,15 +42,23 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   if (!response.ok) {
     const message = typeof body.error === "string"
       ? body.error
-      : typeof body.message === "string"
-        ? body.message
-        : "Request failed";
+        : typeof body.message === "string"
+          ? body.message
+          : "Request failed";
     console.error("API request failed", {
       requestUrl,
       status: response.status,
       body
     });
     if (response.status === 401 && typeof message === "string" && message.toLowerCase().includes("token")) {
+      const refreshed = supabase ? (await supabase.auth.refreshSession()).data.session : null;
+      if (refreshed?.access_token && refreshed.access_token !== session.access_token) {
+        response = await fetchWithToken(refreshed.access_token);
+        const retryRawBody = await response.text();
+        if (response.ok) {
+          return (retryRawBody ? JSON.parse(retryRawBody) : {}) as T;
+        }
+      }
       await supabase?.auth.signOut();
       if (typeof window !== "undefined") {
         window.location.href = "/login?error=session_expired";

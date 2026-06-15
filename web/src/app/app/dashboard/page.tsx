@@ -26,6 +26,11 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  async function logout() {
+    await fetch("/logout", { method: "POST" });
+    window.location.assign("/login");
+  }
+
   useEffect(() => {
     let isMounted = true;
     getShops()
@@ -72,9 +77,9 @@ export default function DashboardPage() {
               {whatsAppStatus === "connected" || whatsAppStatus === "open" ? "WhatsApp connected" : "WhatsApp not connected"}
             </div>
             <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">{statusLabel(shop?.merchant_status)}</div>
-            <Link href="/logout" className="text-xs font-semibold text-muted-foreground underline">
+            <button type="button" onClick={logout} className="text-xs font-semibold text-muted-foreground underline">
               Logout
-            </Link>
+            </button>
           </div>
         </div>
         {error ? (

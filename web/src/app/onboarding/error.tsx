@@ -12,6 +12,11 @@ export default function OnboardingError({ error, reset }: { error: Error & { dig
     });
   }, [error]);
 
+  async function loginAgain() {
+    await fetch("/logout", { method: "POST" });
+    window.location.assign("/login");
+  }
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center bg-background px-5 py-6">
       <Card className="p-5">
@@ -19,7 +24,7 @@ export default function OnboardingError({ error, reset }: { error: Error & { dig
         <p className="mt-2 text-sm text-muted-foreground">The onboarding screen hit a browser error. Try again, or log in again if it repeats.</p>
         <div className="mt-5 grid gap-3">
           <Button onClick={reset}>Try again</Button>
-          <Button variant="secondary" onClick={() => window.location.assign("/logout")}>
+          <Button variant="secondary" onClick={loginAgain}>
             Login again
           </Button>
         </div>
