@@ -7,6 +7,11 @@ import { pinoHttp } from "pino-http";
 import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 
+function allowedOrigins() {
+  const origins = [env.WEB_APP_URL, env.FRONTEND_URL, env.API_BASE_URL].filter((origin): origin is string => Boolean(origin));
+  return origins.length > 0 ? origins : true;
+}
+
 export function applySecurity(app: Express) {
   app.disable("x-powered-by");
   app.use(helmet({
@@ -14,7 +19,7 @@ export function applySecurity(app: Express) {
     contentSecurityPolicy: env.NODE_ENV === "production" ? undefined : false
   }));
   app.use(cors({
-    origin: env.NODE_ENV === "production" && env.API_BASE_URL ? [env.API_BASE_URL] : true,
+    origin: env.NODE_ENV === "production" ? allowedOrigins() : true,
     credentials: false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   }));

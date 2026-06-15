@@ -19,6 +19,8 @@ const envSchema = z.object({
   EVOLUTION_API_KEY: optionalString(z.string().min(1)),
   GROQ_API_KEY: optionalString(z.string().min(1)),
   API_BASE_URL: optionalString(z.string().url()),
+  WEB_APP_URL: optionalString(z.string().url()),
+  FRONTEND_URL: optionalString(z.string().url()),
   RENDER_EXTERNAL_URL: optionalString(z.string().url()),
   APP_NAME: z.string().min(1).default("Retail Loyalty"),
   LOG_LEVEL: z.string().default("info")
@@ -34,7 +36,8 @@ const fallbackForTests = {
   EVOLUTION_API_URL: "http://localhost:8081",
   EVOLUTION_API_KEY: "test-evolution-api-key",
   GROQ_API_KEY: "test-groq-api-key",
-  API_BASE_URL: "http://localhost:8080"
+  API_BASE_URL: "http://localhost:8080",
+  WEB_APP_URL: "http://localhost:3000"
 };
 
 const input = process.env.NODE_ENV === "test" ? { ...fallbackForTests, ...process.env } : process.env;

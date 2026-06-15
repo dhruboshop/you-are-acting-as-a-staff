@@ -1,4 +1,4 @@
-import { env } from "./env";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 
 export type MerchantShop = {
   id: string;
@@ -11,36 +11,46 @@ export type MerchantShop = {
   total_loyalty_members?: number;
 };
 
-export async function fetchMerchantShops(accessToken: string): Promise<MerchantShop[]> {
-  const profileResponse = await fetch(`${env.apiBaseUrl}/api/auth/me`, {
-    cache: "no-store",
-    headers: { authorization: `Bearer ${accessToken}` }
+export async function ensureMerchantProfile(supabase: SupabaseClient, session: Session) {
+  const user = session.user;
+  const { error } = await supabase.from("users").upsert({
+    id: user.id,
+    email: user.email ?? null,
+    full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+    avatar_url: user.user_metadata?.avatar_url ?? null
   });
 
-  if (!profileResponse.ok) {
-    throw new Error("Unable to verify Google merchant profile");
+  if (error) {
+    throw new Error(error.message);
   }
-
-  const shopsResponse = await fetch(`${env.apiBaseUrl}/api/shops`, {
-    cache: "no-store",
-    headers: { authorization: `Bearer ${accessToken}` }
-  });
-
-  if (!shopsResponse.ok) {
-    throw new Error("Unable to load merchant shops");
-  }
-
-  const body = (await shopsResponse.json()) as { shops?: MerchantShop[] };
-  return body.shops ?? [];
 }
 
-export async function tryFetchMerchantShops(accessToken: string) {
+export async function fetchMerchantShops(supabase: SupabaseClient, session: Session): Promise<MerchantShop[]> {
+  await ensureMerchantProfile(supabase, session);
+  const { data, error } = await supabase
+    .from("shops")
+    .select("id,name,phone,address,settings")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((shop) => ({
+    ...shop,
+    total_customers: 0,
+    total_campaigns: 0,
+    total_loyalty_members: 0
+  }));
+}
+
+export async function tryFetchMerchantShops(supabase: SupabaseClient, session: Session) {
   try {
-    const shops = await fetchMerchantShops(accessToken);
+    const shops = await fetchMerchantShops(supabase, session);
     return { shops, error: null as string | null };
   } catch (caught) {
     const message = caught instanceof Error ? caught.message : "Unable to load merchant shops";
-    console.error("MERCHANT_SHOP_LOOKUP_FAILED", message);
     return { shops: [] as MerchantShop[], error: message };
   }
 }

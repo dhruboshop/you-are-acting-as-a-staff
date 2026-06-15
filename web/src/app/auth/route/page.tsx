@@ -18,7 +18,7 @@ export default async function MerchantRoutePage() {
     redirect("/login");
   }
 
-  const { shops, error } = await tryFetchMerchantShops(session.access_token);
+  const { shops, error } = await tryFetchMerchantShops(supabase, session);
   if (error) {
     redirect("/login?error=api_unavailable");
   }

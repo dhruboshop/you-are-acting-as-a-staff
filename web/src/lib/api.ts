@@ -46,15 +46,89 @@ export type Customer = {
 };
 
 export async function getShops() {
-  return apiFetch<{ shops: Shop[] }>("/api/shops");
+  const supabase = createBrowserSupabase();
+  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  if (!supabase || !session) {
+    throw new Error("Google session required");
+  }
+
+  const { data, error } = await supabase
+    .from("shops")
+    .select("id,name,phone,address,logo_url,settings")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    shops: (data ?? []).map((shop) => ({
+      ...shop,
+      total_customers: 0,
+      total_campaigns: 0,
+      total_loyalty_members: 0
+    })) as Shop[]
+  };
 }
 
 export async function createShop(input: { name: string; phone?: string; address?: string; settings?: Record<string, unknown> }) {
-  return apiFetch<{ shop: Shop }>("/api/shops", { method: "POST", body: JSON.stringify(input) });
+  const supabase = createBrowserSupabase();
+  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  if (!supabase || !session) {
+    throw new Error("Google session required");
+  }
+
+  const { error: profileError } = await supabase.from("users").upsert({
+    id: session.user.id,
+    email: session.user.email ?? null,
+    full_name: session.user.user_metadata?.full_name ?? session.user.user_metadata?.name ?? null,
+    avatar_url: session.user.user_metadata?.avatar_url ?? null
+  });
+
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  const { data, error } = await supabase
+    .from("shops")
+    .insert({
+      owner_user_id: session.user.id,
+      name: input.name,
+      phone: input.phone ?? null,
+      address: input.address ?? null,
+      settings: input.settings ?? {}
+    })
+    .select("id,name,phone,address,logo_url,settings")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { shop: { ...data, total_customers: 0, total_campaigns: 0, total_loyalty_members: 0 } as Shop };
 }
 
 export async function updateShop(id: string, input: { name?: string; phone?: string; address?: string; settings?: Record<string, unknown> }) {
-  return apiFetch<{ shop: Shop }>(`/api/shops/${id}`, { method: "PATCH", body: JSON.stringify(input) });
+  const supabase = createBrowserSupabase();
+  const session = supabase ? (await supabase.auth.getSession()).data.session : null;
+  if (!supabase || !session) {
+    throw new Error("Google session required");
+  }
+
+  const { data, error } = await supabase
+    .from("shops")
+    .update(input)
+    .eq("id", id)
+    .eq("owner_user_id", session.user.id)
+    .select("id,name,phone,address,logo_url,settings")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { shop: { ...data, total_customers: 0, total_campaigns: 0, total_loyalty_members: 0 } as Shop };
 }
 
 export async function connectWhatsApp(input: { shopId: string; instanceName: string }) {
