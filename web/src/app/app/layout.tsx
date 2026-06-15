@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { tryFetchMerchantShops } from "@/lib/merchant-server";
+import { fetchServerOnboardingStatus } from "@/lib/onboarding-server";
 import { createServerSupabase } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +18,18 @@ export default async function ProtectedAppLayout({ children }: { children: React
     redirect("/login");
   }
 
-  const { shops, error } = await tryFetchMerchantShops(supabase, session);
-  if (error) {
-    redirect("/login?error=api_unavailable");
+  let nextRoute: "/onboarding/shop" | "/onboarding/whatsapp" | "/app/dashboard";
+  let onboardingComplete = false;
+  try {
+    const status = await fetchServerOnboardingStatus(session);
+    nextRoute = status.nextRoute;
+    onboardingComplete = status.onboardingComplete;
+  } catch (error) {
+    const message = error instanceof Error ? encodeURIComponent(error.message) : "unknown";
+    redirect(`/login?error=onboarding_unavailable&detail=${message}`);
   }
-
-  if (shops.length === 0) {
-    redirect("/onboarding/shop");
+  if (!onboardingComplete) {
+    redirect(nextRoute);
   }
 
   return children;

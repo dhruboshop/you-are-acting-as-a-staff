@@ -6,17 +6,29 @@ import { createBrowserSupabase } from "./supabase";
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const supabase = createBrowserSupabase();
   const session = supabase ? (await supabase.auth.getSession()).data.session : null;
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
+  if (!session?.access_token) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login?error=session_missing";
+    }
+    throw new Error("Google session required");
+  }
+  const requestUrl = `${env.apiBaseUrl}${path}`;
+  const response = await fetch(requestUrl, {
     ...init,
     headers: {
       "content-type": "application/json",
-      ...(session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {}),
+      authorization: `Bearer ${session.access_token}`,
       ...(init.headers ?? {})
     }
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = body.error ?? body.message ?? "Request failed";
+    console.error("API request failed", {
+      requestUrl,
+      status: response.status,
+      body
+    });
     if (response.status === 401 && typeof message === "string" && message.toLowerCase().includes("token")) {
       await supabase?.auth.signOut();
       if (typeof window !== "undefined") {
@@ -75,6 +87,37 @@ export type WhatsAppConnection = {
   created_at: string;
   updated_at: string;
 };
+
+export type OnboardingStatus = {
+  user: {
+    id: string;
+    email: string | null;
+    fullName: string | null;
+    avatarUrl: string | null;
+  };
+  merchant: {
+    id: string;
+  };
+  shop: {
+    id: string;
+    name: string;
+    phone: string | null;
+    address: string | null;
+    merchantStatus: "TRIAL" | "ACTIVE" | "EXPIRED" | "BLOCKED";
+    trialEndsAt: string | null;
+  } | null;
+  whatsapp: {
+    status: WhatsAppConnectionStatus;
+    instanceName: string | null;
+    connected: boolean;
+  };
+  nextRoute: "/onboarding/shop" | "/onboarding/whatsapp" | "/app/dashboard";
+  onboardingComplete: boolean;
+};
+
+export async function getOnboardingStatus() {
+  return apiFetch<OnboardingStatus>("/api/auth/onboarding");
+}
 
 export async function getShops() {
   return apiFetch<{ shops: Shop[] }>("/api/shops");

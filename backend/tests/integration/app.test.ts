@@ -62,6 +62,71 @@ describe("app", () => {
     expect(response.status).toBe(401);
   });
 
+  it("returns onboarding route for merchants without a shop", async () => {
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce(null);
+
+    const response = await request(createApp())
+      .get("/api/auth/onboarding")
+      .set("Authorization", "Bearer valid-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.nextRoute).toBe("/onboarding/shop");
+    expect(response.body.onboardingComplete).toBe(false);
+    expect(response.body.shop).toBeNull();
+  });
+
+  it("returns WhatsApp onboarding route for merchants with an unconnected shop", async () => {
+    const shopId = crypto.randomUUID();
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({
+        id: shopId,
+        name: "Radha Jewels",
+        phone: "+919876543210",
+        address: "Kolkata",
+        merchant_status: "TRIAL",
+        trial_ends_at: new Date().toISOString(),
+        whatsapp_status: "not_connected",
+        whatsapp_instance_name: null
+      });
+
+    const response = await request(createApp())
+      .get("/api/auth/onboarding")
+      .set("Authorization", "Bearer valid-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.nextRoute).toBe("/onboarding/whatsapp");
+    expect(response.body.onboardingComplete).toBe(false);
+    expect(response.body.shop.id).toBe(shopId);
+  });
+
+  it("returns dashboard route for merchants with connected WhatsApp", async () => {
+    const shopId = crypto.randomUUID();
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({
+        id: shopId,
+        name: "Radha Jewels",
+        phone: "+919876543210",
+        address: "Kolkata",
+        merchant_status: "TRIAL",
+        trial_ends_at: new Date().toISOString(),
+        whatsapp_status: "open",
+        whatsapp_instance_name: `shop_${shopId.replaceAll("-", "_")}`
+      });
+
+    const response = await request(createApp())
+      .get("/api/auth/onboarding")
+      .set("Authorization", "Bearer valid-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.nextRoute).toBe("/app/dashboard");
+    expect(response.body.onboardingComplete).toBe(true);
+    expect(response.body.whatsapp.connected).toBe(true);
+  });
+
   it("validates public customer registration", async () => {
     const response = await request(createApp())
       .post(`/api/public/shops/${crypto.randomUUID()}/customers`)
