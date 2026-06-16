@@ -14,8 +14,9 @@ export type EvolutionConnectionStatus =
 
 type JsonObject = Record<string, unknown>;
 const evolutionTimeoutMs = 45_000;
-const maxTransientAttempts = 3;
+const maxTransientAttempts = 5;
 const upstreamPreviewLength = 280;
+const productionRetryDelaysMs = [1_500, 4_000, 8_000, 12_000];
 
 export interface EvolutionInstanceResult {
   instanceName: string;
@@ -36,7 +37,7 @@ export interface EvolutionConnectionStatusResult {
   raw: JsonObject;
 }
 
-function createInstanceName(shopId: string) {
+export function createInstanceName(shopId: string) {
   return `shop_${shopId.replaceAll("-", "_")}`;
 }
 
@@ -67,7 +68,7 @@ function upstreamFailureMessage(status: number, body: JsonObject, rawBody: strin
     return directMessage;
   }
   if (rawBody && isHtmlResponse(rawBody)) {
-    return `Evolution API returned an HTML error page with status ${status}. Check the Evolution service health and Render logs.`;
+    return `WhatsApp service is temporarily unavailable while the connection server starts. Please wait a moment and try again.`;
   }
   return `Evolution API request failed with status ${status}`;
 }
@@ -168,7 +169,9 @@ function isTransientStatus(status: number) {
 }
 
 async function waitForRetry(attempt: number) {
-  await new Promise((resolve) => setTimeout(resolve, attempt * 150));
+  if (process.env.NODE_ENV === "test") return;
+  const delay = productionRetryDelaysMs[Math.max(0, attempt - 1)] ?? productionRetryDelaysMs.at(-1) ?? 5_000;
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit) {
@@ -245,6 +248,10 @@ async function evolutionFetch<T extends JsonObject>(path: string, init: RequestI
   }
 
   return body as T;
+}
+
+export function isTemporaryEvolutionFailure(error: unknown) {
+  return error instanceof HttpError && (error.status === 502 || error.status === 503 || error.status === 504);
 }
 
 export async function createInstance(shopId: string): Promise<EvolutionInstanceResult> {

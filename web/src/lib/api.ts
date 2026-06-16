@@ -195,6 +195,9 @@ export async function getCustomers(input: { shopId: string; search?: string; pag
 
 export async function connectWhatsApp(input: { shopId: string }) {
   return apiFetch<{
+    success?: boolean;
+    retryable?: boolean;
+    error?: string;
     connection: WhatsAppConnection;
     pairingCode: string | null;
     qrCode: unknown;
@@ -209,7 +212,11 @@ export async function getWhatsAppStatus(shopId: string) {
   return apiFetch<{
     status: WhatsAppConnectionStatus;
     connection: WhatsAppConnection | null;
-    evolution?: unknown;
+    evolution?: {
+      available?: boolean;
+      retryable?: boolean;
+      error?: string;
+    } | unknown;
   }>(`/api/whatsapp/status?shopId=${encodeURIComponent(shopId)}`);
 }
 

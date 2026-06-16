@@ -220,11 +220,22 @@ describe("app", () => {
     expect(vi.mocked(global.fetch)).not.toHaveBeenCalled();
   });
 
-  it("returns a graceful error when Evolution is offline", async () => {
+  it("returns a retryable WhatsApp connection state when Evolution is offline", async () => {
     const shopId = crypto.randomUUID();
+    const instanceName = `shop_${shopId.replaceAll("-", "_")}`;
     dbMocks.queryOne
       .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
-      .mockResolvedValueOnce({ id: shopId });
+      .mockResolvedValueOnce({ id: shopId })
+      .mockResolvedValueOnce({
+        id: crypto.randomUUID(),
+        shop_id: shopId,
+        instance_name: instanceName,
+        phone_number: null,
+        status: "connecting",
+        connected_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     vi.mocked(global.fetch).mockRejectedValue(new Error("connect ECONNREFUSED"));
 
     const response = await request(createApp())
@@ -232,17 +243,30 @@ describe("app", () => {
       .set("Authorization", "Bearer valid-token")
       .send({ shopId });
 
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(202);
     expect(response.body.success).toBe(false);
-    expect(response.body.error).toBe("Evolution API is unreachable");
-    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(3);
+    expect(response.body.retryable).toBe(true);
+    expect(response.body.error).toBe("WhatsApp connection service is waking up. Wait about 30 seconds, then tap Generate Pairing Code again.");
+    expect(response.body.connection.status).toBe("connecting");
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(5);
   });
 
-  it("sanitizes HTML 502 responses from Evolution", async () => {
+  it("converts HTML 502 responses from Evolution into a retryable connection state", async () => {
     const shopId = crypto.randomUUID();
+    const instanceName = `shop_${shopId.replaceAll("-", "_")}`;
     dbMocks.queryOne
       .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
-      .mockResolvedValueOnce({ id: shopId });
+      .mockResolvedValueOnce({ id: shopId })
+      .mockResolvedValueOnce({
+        id: crypto.randomUUID(),
+        shop_id: shopId,
+        instance_name: instanceName,
+        phone_number: null,
+        status: "connecting",
+        connected_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     vi.mocked(global.fetch).mockResolvedValue(
       new Response("<!DOCTYPE html><title>502</title>", {
         status: 502,
@@ -255,21 +279,31 @@ describe("app", () => {
       .set("Authorization", "Bearer valid-token")
       .send({ shopId });
 
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(202);
     expect(response.body.success).toBe(false);
-    expect(response.body.error).toBe("Evolution API returned an HTML error page with status 502. Check the Evolution service health and Render logs.");
+    expect(response.body.retryable).toBe(true);
+    expect(response.body.error).toBe("WhatsApp connection service is waking up. Wait about 30 seconds, then tap Generate Pairing Code again.");
     expect(response.body.error).not.toContain("<!DOCTYPE");
-    expect(response.body.details.body).toBeUndefined();
-    expect(response.body.details.bodyPreview).toBeUndefined();
-    expect(response.body.details.path).toBe("/instance/create");
-    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(3);
+    expect(response.body.evolution.available).toBe(false);
+    expect(vi.mocked(global.fetch)).toHaveBeenCalledTimes(5);
   });
 
   it("surfaces Evolution authentication failures without retrying", async () => {
     const shopId = crypto.randomUUID();
+    const instanceName = `shop_${shopId.replaceAll("-", "_")}`;
     dbMocks.queryOne
       .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
-      .mockResolvedValueOnce({ id: shopId });
+      .mockResolvedValueOnce({ id: shopId })
+      .mockResolvedValueOnce({
+        id: crypto.randomUUID(),
+        shop_id: shopId,
+        instance_name: instanceName,
+        phone_number: null,
+        status: "connecting",
+        connected_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
     vi.mocked(global.fetch).mockResolvedValueOnce(new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 }));
 
     const response = await request(createApp())

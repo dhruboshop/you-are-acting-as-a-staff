@@ -78,6 +78,12 @@ function extractQrValue(value: unknown): QrRenderValue | null {
   return code ? { kind: "text", value: code } : null;
 }
 
+function readRetryableEvolutionError(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const object = value as Record<string, unknown>;
+  return object.available === false && typeof object.error === "string" ? object.error : null;
+}
+
 export default function WhatsAppConnectPage() {
   const router = useRouter();
   const pollTimerRef = useRef<number | null>(null);
@@ -111,7 +117,7 @@ export default function WhatsAppConnectPage() {
       const result = await getWhatsAppStatus(currentShopId);
       setStatus(result.status);
       setConnection(result.connection);
-      setError("");
+      setError(readRetryableEvolutionError(result.evolution) ?? "");
       if (connectedStatuses.includes(result.status)) {
         stopPolling();
         window.setTimeout(() => router.replace("/app/dashboard"), 800);
@@ -191,6 +197,7 @@ export default function WhatsAppConnectPage() {
       setPairingCode(isPairingCode(result.pairingCode) ? result.pairingCode : null);
       setQrCode(result.qrCode);
       setShowQr(Boolean(extractQrValue(result.qrCode)));
+      setError(result.retryable && result.error ? result.error : "");
       startPolling(shopId);
     } catch (caught) {
       setStatus("failed");

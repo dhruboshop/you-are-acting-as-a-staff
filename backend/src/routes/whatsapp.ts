@@ -5,10 +5,12 @@ import { queryOne } from "../db/pool.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   createInstance,
+  createInstanceName,
   deleteInstance,
   disconnectInstance,
   getConnectionStatus,
   getPairingCode,
+  isTemporaryEvolutionFailure,
   normalizeEvolutionStatus,
   type EvolutionConnectionStatus
 } from "../services/evolution.service.js";
@@ -159,8 +161,7 @@ router.post("/connect", asyncHandler(async (req, res) => {
   const body = whatsappConnectSchema.parse(req.body);
   await assertShopOwner(body.shopId, req.ownerUserId);
 
-  const instance = await createInstance(body.shopId);
-  const pairing = await getPairingCode(instance.instanceName);
+  const instanceName = createInstanceName(body.shopId);
   const connection = await queryOne<WhatsappConnectionRow>(
     `insert into whatsapp_connections (shop_id, instance_name, status, connected_at)
      values ($1, $2, 'connecting', null)
@@ -169,18 +170,37 @@ router.post("/connect", asyncHandler(async (req, res) => {
        status = 'connecting',
        updated_at = now()
      returning *`,
-    [body.shopId, instance.instanceName]
+    [body.shopId, instanceName]
   );
 
-  res.status(201).json({
-    connection,
-    pairingCode: pairing.pairingCode ?? null,
-    qrCode: pairing.qrCode ?? null,
-    evolution: {
-      create: instance.raw,
-      pairing: pairing.raw
-    }
-  });
+  try {
+    const instance = await createInstance(body.shopId);
+    const pairing = await getPairingCode(instance.instanceName);
+
+    res.status(201).json({
+      connection,
+      pairingCode: pairing.pairingCode ?? null,
+      qrCode: pairing.qrCode ?? null,
+      evolution: {
+        create: instance.raw,
+        pairing: pairing.raw
+      }
+    });
+  } catch (error) {
+    if (!isTemporaryEvolutionFailure(error)) throw error;
+    logger.warn({ err: error, shopId: body.shopId, instanceName }, "Evolution is temporarily unavailable during WhatsApp connect");
+    res.status(202).json({
+      success: false,
+      retryable: true,
+      error: "WhatsApp connection service is waking up. Wait about 30 seconds, then tap Generate Pairing Code again.",
+      connection,
+      pairingCode: null,
+      qrCode: null,
+      evolution: {
+        available: false
+      }
+    });
+  }
 }));
 
 router.get("/status", asyncHandler(async (req, res) => {
@@ -194,19 +214,33 @@ router.get("/status", asyncHandler(async (req, res) => {
     res.json({ status: "not_connected", connection: null });
     return;
   }
-  const statusResult = await getConnectionStatus(connection.instance_name);
-  const status = statusResult.status;
-  const updated = await queryOne<WhatsappConnectionRow>(
-    `update whatsapp_connections
-     set status = $2,
-         phone_number = coalesce($3, phone_number),
-         connected_at = case when $2 in ('open', 'connected') then coalesce(connected_at, now()) else connected_at end,
-         updated_at = now()
-     where shop_id = $1
-     returning *`,
-    [shopId, status, statusResult.phoneNumber ?? null]
-  );
-  res.json({ status, connection: updated, evolution: statusResult.raw });
+  try {
+    const statusResult = await getConnectionStatus(connection.instance_name);
+    const status = statusResult.status;
+    const updated = await queryOne<WhatsappConnectionRow>(
+      `update whatsapp_connections
+       set status = $2,
+           phone_number = coalesce($3, phone_number),
+           connected_at = case when $2 in ('open', 'connected') then coalesce(connected_at, now()) else connected_at end,
+           updated_at = now()
+       where shop_id = $1
+       returning *`,
+      [shopId, status, statusResult.phoneNumber ?? null]
+    );
+    res.json({ status, connection: updated, evolution: statusResult.raw });
+  } catch (error) {
+    if (!isTemporaryEvolutionFailure(error)) throw error;
+    logger.warn({ err: error, shopId, instanceName: connection.instance_name }, "Evolution is temporarily unavailable during WhatsApp status check");
+    res.json({
+      status: connection.status,
+      connection,
+      evolution: {
+        available: false,
+        retryable: true,
+        error: "WhatsApp connection service is waking up. Status will update automatically when it is available."
+      }
+    });
+  }
 }));
 
 router.post("/disconnect", asyncHandler(async (req, res) => {
