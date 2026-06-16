@@ -63,7 +63,7 @@ export default function CampaignsPage() {
         if (!activeShop) return;
         const [status, customerResult] = await Promise.all([
           getWhatsAppStatus(activeShop.id).catch(() => ({ status: "unknown" as WhatsAppConnectionStatus })),
-          getCustomers({ shopId: activeShop.id, pageSize: 200 })
+          getCustomers({ shopId: activeShop.id, pageSize: 100 })
         ]);
         setWhatsAppStatus(status.status);
         setCustomers(customerResult.customers);
