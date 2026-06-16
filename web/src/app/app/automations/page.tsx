@@ -115,17 +115,7 @@ export default function AutomationsPage() {
         <p className="text-sm font-semibold text-primary">Remember Every Customer Moment</p>
         <h1 className="mt-1 text-3xl font-bold">Automations</h1>
         <p className="mt-2 text-muted-foreground">Set up simple customer greetings. Festival campaigns always stay as drafts until you approve them.</p>
-        <Card className="mt-5 bg-primary p-5 text-primary-foreground">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Bot className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{enabledCount}/4 setups saved</p>
-              <p className="text-sm opacity-85">Zappy only uses saved customer dates and WhatsApp status.</p>
-            </div>
-          </div>
-        </Card>
+        <p className="mt-2 text-[14px] text-[#6B7280]">These send automatically when WhatsApp is connected and customer dates are saved.</p>
 
         {!enabledCount ? (
           <Card className="mt-4 p-4">
@@ -152,7 +142,12 @@ export default function AutomationsPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold">{automation.title}</p>
-                        <p className="mt-1 text-xs font-semibold text-primary">{enabled ? "Setup saved" : "Not set"}</p>
+                        <p className="mt-1 text-[13px] text-[#6B7280]">
+                          {automation.key === "birthday" ? "Sends on the customer's birthday" :
+                           automation.key === "anniversary" ? "Sends on the customer's anniversary" :
+                           automation.key === "festival" ? "Creates a draft for your approval" :
+                           "Sends when a new customer joins"}
+                        </p>
                       </div>
                       <button
                         type="button"
@@ -170,7 +165,28 @@ export default function AutomationsPage() {
                       <p>Reward: Greeting Only</p>
                       <p>{automation.approval}</p>
                     </div>
-                    <Card className="mt-3 bg-muted/50 p-3 text-sm">{automation.preview.replace("{shop}", shop?.name ?? "your shop")}</Card>
+                    <div 
+                      className="mt-3 bg-white border border-[#E5E7EB] text-[14px] text-[#374151]"
+                      style={{
+                        borderRadius: "12px 12px 12px 0",
+                        padding: "12px 16px",
+                        lineHeight: 1.6
+                      }}
+                    >
+                      {(() => {
+                        const shopName = shop?.name ?? "your shop";
+                        const replaced = automation.preview.replace(/{shop}/g, shopName);
+                        const parts = replaced.split("{name}");
+                        return parts.map((part, i) => (
+                          <span key={i}>
+                            {part}
+                            {i < parts.length - 1 && (
+                              <span className="italic text-[#6B7280] font-normal">[Customer Name]</span>
+                            )}
+                          </span>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 </div>
               </Card>

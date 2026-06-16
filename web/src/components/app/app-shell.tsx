@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, Bot, Megaphone, QrCode, Users } from "lucide-react";
+import { BarChart3, Bot, Megaphone, QrCode, Users, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -18,11 +18,30 @@ export function AppShell({ active, children }: { active: string; children: React
         <div className="grid h-16 grid-cols-5">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const selected = active === tab.label;
+            const isAutoTab = tab.href === "/app/automations";
+            const selected = active === tab.label || (isAutoTab && (active === "Auto" || active === "Automations"));
             return (
-              <Link key={tab.href} href={tab.href} className={cn("flex flex-col items-center justify-center gap-1 text-xs", selected ? "text-primary" : "text-muted-foreground")}>
-                <Icon className="h-5 w-5" />
-                <span>{tab.label}</span>
+              <Link 
+                key={tab.href} 
+                href={tab.href} 
+                className={cn(
+                  "flex h-full w-full flex-col items-center justify-center pt-2 pb-3 text-[11px] font-medium transition-colors", 
+                  selected ? "text-primary font-semibold" : "text-muted-foreground"
+                )}
+              >
+                {isAutoTab ? (
+                  <>
+                    <Bot className="h-5 w-5 nav-label-wide" />
+                    <Clock className="h-5 w-5 nav-label-narrow" />
+                    <span className="nav-label-wide">Automations</span>
+                    <span className="nav-label-narrow">Auto</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon className="h-5 w-5" />
+                    <span>{tab.label}</span>
+                  </>
+                )}
               </Link>
             );
           })}

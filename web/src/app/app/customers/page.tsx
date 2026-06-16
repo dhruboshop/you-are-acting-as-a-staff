@@ -52,27 +52,31 @@ export default function CustomersPage() {
       <section className="px-5 py-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-semibold text-primary">Remember every customer moment</p>
-            <h1 className="mt-1 text-3xl font-bold">Customers</h1>
+            <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-primary">Remember every customer moment</p>
+            <h1 className="mt-1 text-[26px] font-bold text-[#111827]">Customers</h1>
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">{total}</span>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-[13px] font-semibold text-primary">{total}</span>
         </div>
-        <p className="mt-2 text-muted-foreground">Names, WhatsApp numbers, birthdays, and anniversaries collected from your shop QR.</p>
+        <p className="mt-2 text-[15px] text-[#6B7280]">Names, WhatsApp numbers, birthdays, and anniversaries collected from your shop QR.</p>
 
-        <div className="relative mt-5">
+        <div className="relative mt-6">
           <Search className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
           <Input className="pl-10" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name or WhatsApp" />
         </div>
 
         {error ? <Card className="mt-4 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</Card> : null}
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-4">
           {!error && visibleCustomers.length === 0 ? (
-            <Card className="p-5">
-              <QrCode className="h-9 w-9 text-primary" />
-              <h2 className="mt-3 font-semibold">No customers yet</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Share your QR code at the counter to get started.</p>
-              <Button asChild className="mt-4 w-full">
+            <Card className="p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <QrCode className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 font-semibold text-[#111827] text-[15px]">No customers yet</h3>
+              <p className="mt-2 text-[13px] text-[#6B7280] max-w-xs mx-auto">
+                Share your QR code at the counter to get started collecting customer details.
+              </p>
+              <Button asChild className="mt-5 w-full">
                 <Link href="/app/qr">Open QR Code</Link>
               </Button>
             </Card>
@@ -85,14 +89,14 @@ export default function CustomersPage() {
                   {customer.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{customer.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{customer.whatsapp_number}</p>
-                  <div className="mt-4 space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                  <p className="font-semibold text-[#111827] text-[15px]">{customer.name}</p>
+                  <p className="mt-1 text-[13px] text-[#6B7280]">{customer.whatsapp_number}</p>
+                  <div className="mt-4 space-y-2 text-[13px]">
+                    <div className="flex items-center gap-2 text-[#6B7280]">
                       <CalendarHeart className="h-4 w-4 text-primary" />
                       <span>Birthday: {formatDayMonth(customer.birthday)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-[#6B7280]">
                       <HeartHandshake className="h-4 w-4 text-primary" />
                       <span>Anniversary: {formatDayMonth(customer.anniversary)}</span>
                     </div>

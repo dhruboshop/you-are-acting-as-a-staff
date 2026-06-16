@@ -68,9 +68,9 @@ export default function QrPage() {
   return (
     <AppShell active="QR">
       <section className="px-5 py-6">
-        <p className="text-sm font-semibold text-primary">Print once, collect customers daily</p>
-        <h1 className="mt-1 text-3xl font-bold">QR Displays</h1>
-        <p className="mt-2 text-muted-foreground">Customers scan once to join your rewards list. This QR does not track visits.</p>
+        <p className="text-[11px] uppercase tracking-[0.08em] font-semibold text-primary">Print once, collect customers daily</p>
+        <h1 className="mt-1 text-[26px] font-bold text-[#111827]">QR Displays</h1>
+        <p className="mt-2 text-[15px] text-[#6B7280]">Customers scan once to join your rewards list. This QR does not track visits.</p>
 
         <div className="mt-5 grid grid-cols-3 gap-2">
           {displayTypes.map((item) => (
@@ -80,17 +80,22 @@ export default function QrPage() {
           ))}
         </div>
 
-        <Card className={`mt-6 flex ${activeDisplay.className} flex-col justify-between overflow-hidden rounded-3xl border-2 border-primary/20 p-6 text-center`}>
+        <Card 
+          id="print-qr-card"
+          className={`mt-6 flex ${activeDisplay.className} flex-col justify-between overflow-hidden rounded-[24px] border border-black/[0.08] p-8 text-center bg-white shadow-lg`}
+        >
           <div>
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">Z</div>
-            <h2 className="mt-4 text-2xl font-bold">{shop?.name ?? "Your Shop"}</h2>
-            <p className="mt-2 text-3xl font-black leading-tight">Scan and Join Rewards</p>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-white shadow-md">
+              {shop?.name?.slice(0, 1).toUpperCase() ?? "Z"}
+            </div>
+            <h2 className="mt-4 text-xl font-bold text-[#111827]">{shop?.name ?? "Your Shop"}</h2>
+            <p className="mt-2 text-2xl font-black leading-tight text-[#111827]">Scan & Join Rewards</p>
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {registrationUrl ? (
-            <div ref={qrContainerRef} className="mx-auto rounded-3xl bg-white p-4 shadow-sm">
-              <QRCodeSVG value={registrationUrl} size={220} />
+            <div ref={qrContainerRef} className="mx-auto rounded-2xl bg-white p-4 border border-black/[0.04] shadow-inner">
+              <QRCodeSVG value={registrationUrl} size={200} />
             </div>
           ) : (
             <div className="space-y-3">
@@ -102,31 +107,29 @@ export default function QrPage() {
           )}
 
           <div>
-            <div className="mx-auto grid max-w-xs grid-cols-3 gap-2 text-xs font-semibold text-primary">
-              <span>Birthday Wishes</span>
-              <span>Festival Offers</span>
-              <span>Special Rewards</span>
+            <div className="mx-auto grid max-w-xs grid-cols-3 gap-2 text-[11px] uppercase tracking-wider font-bold text-primary">
+              <span>🎁 Wishes</span>
+              <span>📣 Offers</span>
+              <span>⭐ Rewards</span>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">Powered by Zappy</p>
+            <p className="mt-4 text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Powered by Zappy</p>
           </div>
         </Card>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <Button variant="secondary" disabled={!registrationUrl} onClick={downloadPng}>
-            <Download className="h-5 w-5" />
-            PNG
-          </Button>
-          <Button variant="secondary" onClick={() => window.print()} disabled={!registrationUrl}>
-            <Printer className="h-5 w-5" />
-            PDF / Print
-          </Button>
-          <Button variant="whatsapp" onClick={shareQr} disabled={!registrationUrl}>
-            <Share2 className="h-5 w-5" />
-            Share
-          </Button>
-          <Button variant="secondary" onClick={() => window.print()} disabled={!registrationUrl}>
-            <Printer className="h-5 w-5" />
-            Print-Friendly
+        <div className="mt-6 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="secondary" disabled={!registrationUrl} onClick={downloadPng} className="w-full">
+              <Download className="h-5 w-5 shrink-0" />
+              Download PNG
+            </Button>
+            <Button variant="secondary" onClick={() => window.print()} disabled={!registrationUrl} className="w-full">
+              <Printer className="h-5 w-5 shrink-0" />
+              Print Display
+            </Button>
+          </div>
+          <Button variant="whatsapp" onClick={shareQr} disabled={!registrationUrl} className="w-full">
+            <Share2 className="h-5 w-5 shrink-0" />
+            Share Registration Link
           </Button>
         </div>
       </section>

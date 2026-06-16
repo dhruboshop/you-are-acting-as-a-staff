@@ -80,10 +80,10 @@ export default function RegisterPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-md bg-background px-5 py-8">
-      <h1 className="text-3xl font-bold">Join {shopName}</h1>
+      <h1 className="text-3xl font-bold">Join {shopName} Rewards</h1>
       <p className="mt-2 text-muted-foreground">Receive birthday wishes, festival offers, special greetings, and customer rewards on WhatsApp.</p>
       <form
-        className="mt-8 space-y-4"
+        className="mt-8 space-y-5"
         onSubmit={async (event) => {
           event.preventDefault();
           setError("");
@@ -92,13 +92,18 @@ export default function RegisterPage() {
             return;
           }
           const form = new FormData(event.currentTarget);
+          const rawWhatsapp = String(form.get("whatsapp") ?? "");
+          let cleanedWhatsapp = rawWhatsapp.replace(/\D/g, "");
+          if (cleanedWhatsapp.length === 10) {
+            cleanedWhatsapp = "91" + cleanedWhatsapp;
+          }
           try {
             const response = await fetch(`${env.apiBaseUrl}/api/public/shops/${params.shopId}/customers`, {
               method: "POST",
               headers: { "content-type": "application/json" },
               body: JSON.stringify({
                 name: form.get("name"),
-                whatsappNumber: form.get("whatsapp"),
+                whatsappNumber: cleanedWhatsapp,
                 birthday: toStoredDate(form.get("birthdayDay"), form.get("birthdayMonth")),
                 anniversary: showAnniversary ? toStoredDate(form.get("anniversaryDay"), form.get("anniversaryMonth")) : null,
                 consent: true
@@ -115,17 +120,33 @@ export default function RegisterPage() {
         }}
       >
         <Input name="name" placeholder="Name" required />
-        <Input name="whatsapp" placeholder="WhatsApp Number" inputMode="tel" required />
+        <div className="relative flex items-center">
+          <span className="absolute left-3 text-muted-foreground font-semibold text-base border-r pr-2 border-border">+91</span>
+          <Input 
+            name="whatsapp" 
+            placeholder="10-digit WhatsApp number" 
+            inputMode="tel" 
+            required 
+            className="pl-16"
+            pattern="[6-9][0-9]{9}"
+            title="Please enter a valid 10-digit Indian mobile number"
+          />
+        </div>
         <DateMonthFields prefix="birthday" label="Birthday (optional)" />
-        <label className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm font-medium">
-          <input type="checkbox" checked={showAnniversary} onChange={(event) => setShowAnniversary(event.target.checked)} />
+        <label className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm font-medium cursor-pointer min-h-[44px]">
+          <input type="checkbox" checked={showAnniversary} onChange={(event) => setShowAnniversary(event.target.checked)} className="h-5 w-5 rounded text-primary focus:ring-primary" />
           Add Anniversary (optional)
         </label>
         {showAnniversary ? <DateMonthFields prefix="anniversary" label="Anniversary" /> : null}
-        <label className="flex gap-3 text-sm text-muted-foreground">
-          <input type="checkbox" required className="mt-1" /> I agree to receive WhatsApp messages from {shopName} including birthday wishes, festival offers, and promotional rewards.
+        <label className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer select-none py-1 min-h-[44px]">
+          <input type="checkbox" required className="mt-1 h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary shrink-0" />
+          <span>
+            I consent to <strong>{shopName}</strong> saving my name and dates to send me birthday wishes, anniversary greetings, and festival offers on WhatsApp. I understand I can opt-out at any time by replying STOP.
+          </span>
         </label>
-        <p className="-mt-2 text-xs text-muted-foreground">Your number is used only to send you rewards and wishes from this shop. We never share your information.</p>
+        <p className="-mt-2 text-[13px] text-[#6B7280] leading-relaxed">
+          Your details are stored securely and processed in compliance with Indian DPDP Act guidelines. We use your details only to send you rewards and wishes from this shop.
+        </p>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <Button className="w-full" size="lg" type="submit">Submit</Button>
       </form>

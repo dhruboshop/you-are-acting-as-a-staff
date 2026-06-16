@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, Gift, MessageSquareText, Send, Smartphone, Wand2, Users } from "lucide-react";
+import { CalendarClock, Gift, MessageSquareText, Send, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
@@ -141,25 +141,23 @@ export default function CampaignsPage() {
         <h1 className="mt-1 text-3xl font-bold">Create Campaign</h1>
         <p className="mt-2 text-muted-foreground">Choose who receives it, what gets sent, what reward is included, and when it sends.</p>
 
-        {error ? <Card className="mt-5 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</Card> : null}
         {success ? <Card className="mt-5 border-[#10B981]/30 bg-[#10B981]/10 p-4 text-sm text-[#047857]">{success}</Card> : null}
         {shop && !canSend ? (
-          <Card className="mt-5 p-4 text-sm text-muted-foreground">
-            <div className="flex gap-3">
-              <Smartphone className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-semibold text-foreground">Connect WhatsApp before sending</p>
-                <p className="mt-1">You can prepare a campaign now. Sending unlocks when WhatsApp is connected.</p>
-              </div>
-            </div>
-            <Button asChild className="mt-3 w-full"><Link href="/onboarding/whatsapp">Connect WhatsApp</Link></Button>
-          </Card>
+          <div className="mt-4 -mx-5 bg-[#FFFBEB] border-b border-[#FDE68A] px-5 py-[10px] text-[14px] text-[#92400E] flex justify-between items-center">
+            <span>WhatsApp not connected — you can build your campaign and send it once connected.</span>
+            <Link href="/onboarding/whatsapp" className="shrink-0 font-semibold text-primary ml-2 hover:underline">
+              Connect WhatsApp →
+            </Link>
+          </div>
         ) : null}
 
-        <div className="mt-5 flex gap-2">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <div key={item} className={`h-1 flex-1 rounded-full ${item <= step ? "bg-primary" : "bg-muted"}`} />
-          ))}
+        <div className="mt-5">
+          <p className="text-[13px] text-[#6B7280]">
+            Step {step} of 5 — {step === 1 ? "Choose Campaign Type" : step === 2 ? "Choose Audience" : step === 3 ? "Choose Reward" : step === 4 ? "Choose Message" : "Schedule"}
+          </p>
+          <div className="mt-2 h-[4px] w-full rounded-[2px] bg-[#E5E7EB] overflow-hidden">
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(step / 5) * 100}%` }} />
+          </div>
         </div>
 
         <Card className="mt-5 p-4">
@@ -194,6 +192,11 @@ export default function CampaignsPage() {
                       <span className="rounded-full bg-card px-3 py-1 text-sm font-semibold">{item.count}</span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">Recipient count is based only on saved customer records.</p>
+                    {item.count === 0 ? (
+                      <p className="mt-2 text-[13px] text-[#6B7280]">
+                        No dates saved yet. You can still create this campaign.
+                      </p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -254,11 +257,34 @@ export default function CampaignsPage() {
                   <Input type="time" value={scheduledTime} onChange={(event) => setScheduledTime(event.target.value)} />
                 </div>
               ) : null}
-              <Card className="mt-4 p-3 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2 font-semibold text-foreground"><Users className="h-4 w-4" />{recipientCount} recipient{recipientCount === 1 ? "" : "s"}</div>
-                <p className="mt-2">Reward: {reward}. Send: {schedule === "Send Now" ? "after approval" : "on the selected date and time"}.</p>
-              </Card>
+              <div className="mt-4 rounded-[12px] bg-[#F9FAFB] p-4 border border-[#E5E7EB] text-left space-y-3">
+                <div>
+                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">Who receives it</p>
+                  <p className="mt-1 text-[15px] font-medium text-[#111827]">
+                    {recipientCount} {type.toLowerCase()} customer{recipientCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <hr className="border-t border-[#E5E7EB]" />
+                <div>
+                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">What they get</p>
+                  <p className="mt-1 text-[15px] font-medium text-[#111827]">
+                    {reward === "Greeting Only" ? "A greeting message" : `Greeting & ${reward}`}
+                  </p>
+                </div>
+                <hr className="border-t border-[#E5E7EB]" />
+                <div>
+                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">When it sends</p>
+                  <p className="mt-1 text-[15px] font-medium text-[#111827]">
+                    {schedule === "Send Now" ? "After your approval" : `Scheduled for ${scheduledDate} at ${scheduledTime}`}
+                  </p>
+                </div>
+              </div>
             </>
+          ) : null}
+          {error ? (
+            <div className="mt-4 rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] p-[12px_16px] text-sm text-[#991B1B]">
+              {error}
+            </div>
           ) : null}
         </Card>
 

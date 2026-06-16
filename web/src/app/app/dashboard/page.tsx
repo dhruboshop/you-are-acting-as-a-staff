@@ -41,7 +41,7 @@ function SummaryCard({ label, value, icon: Icon }: { label: string; value: numbe
         <Icon className="h-5 w-5" />
       </div>
       <p className="text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-[13px] font-medium text-muted-foreground">{label}</p>
     </Card>
   );
 }
@@ -141,7 +141,7 @@ export default function DashboardPage() {
               <h1 className="mt-1 text-3xl font-bold">{shop?.name ?? "Zappy"}</h1>
               <p className="mt-2 max-w-72 text-sm opacity-85">Turn first-time customers into repeat customers with WhatsApp wishes and rewards.</p>
             </div>
-            <button type="button" onClick={logout} className="text-xs font-semibold underline opacity-80">
+            <button type="button" onClick={logout} className="text-[13px] font-semibold underline opacity-80">
               Logout
             </button>
           </div>
@@ -151,17 +151,18 @@ export default function DashboardPage() {
         {!isLoading && !shop ? <Card className="mt-5 p-4 text-sm text-muted-foreground">Taking you to shop setup...</Card> : null}
 
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Next Actions</h2>
-          <div className="mt-3 space-y-3">
+          <h2 className="text-lg font-bold text-[#111827]">Next Actions</h2>
+          <div className="mt-3 space-y-4">
             {!connected || totalCustomers === 0 ? (
-              <Card className="p-4">
-                <div className="space-y-3">
+              <Card className="p-5">
+                <h3 className="text-[12px] font-semibold uppercase tracking-wider text-primary mb-4">Onboarding Checklist</h3>
+                <div className="space-y-4">
                   {setupSteps.map((step) => (
-                    <div key={step.title} className="flex items-start gap-3 rounded-2xl bg-muted/60 p-3">
-                      <CheckCircle2 className={`mt-0.5 h-5 w-5 ${step.done ? "text-[#10B981]" : "text-muted-foreground"}`} />
+                    <div key={step.title} className="flex items-start gap-4 rounded-xl bg-[#F9FAFB] p-4 border border-black/[0.04]">
+                      <CheckCircle2 className={`mt-0.5 h-5 w-5 shrink-0 ${step.done ? "text-[#10B981]" : "text-[#6B7280]"}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold">{step.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{step.text}</p>
+                        <p className="font-semibold text-[#111827] text-[15px]">{step.title}</p>
+                        <p className="mt-1 text-[13px] text-[#6B7280]">{step.text}</p>
                       </div>
                       {!step.done ? (
                         <Button asChild size="sm" variant="secondary">
@@ -176,7 +177,15 @@ export default function DashboardPage() {
             <MomentList title="Upcoming Birthdays" icon={CalendarHeart} items={upcomingBirthdays} field="birthday" />
             <MomentList title="Upcoming Anniversaries" icon={HeartHandshake} items={upcomingAnniversaries} field="anniversary" />
             {!hasNextActions && connected && totalCustomers > 0 ? (
-              <Card className="p-4 text-sm text-muted-foreground">Everything is set up. You will see upcoming birthdays, anniversaries, and festival reminders here as your customer list grows.</Card>
+              <Card className="p-6 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <CalendarHeart className="h-6 w-6" />
+                </div>
+                <h3 className="mt-4 font-semibold text-[#111827] text-[15px]">No upcoming special moments</h3>
+                <p className="mt-2 text-[13px] text-[#6B7280] max-w-xs mx-auto">
+                  Everything is set up. You will see upcoming birthdays, anniversaries, and festival reminders here as your customer list grows.
+                </p>
+              </Card>
             ) : null}
           </div>
         </div>
@@ -185,8 +194,8 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <Smartphone className={`h-6 w-6 ${connected ? "text-[#10B981]" : "text-amber-600"}`} />
             <div className="min-w-0 flex-1">
-              <h2 className="font-semibold">WhatsApp Status</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{connected ? "Connected. Zappy can send approved wishes and offers." : "Disconnected. Reconnect before sending campaigns."}</p>
+              <h2 className="font-semibold text-[#111827]">WhatsApp Status</h2>
+              <p className="mt-1 text-sm text-[#374151]">{connected ? "Connected. Zappy can send approved wishes and offers." : "Disconnected. Reconnect before sending campaigns."}</p>
             </div>
             {!connected ? (
               <Button asChild size="sm">
@@ -196,8 +205,8 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        <h2 className="mt-6 text-lg font-semibold">Customer Summary</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <h2 className="mt-6 text-lg font-bold text-[#111827]">Customer Summary</h2>
+        <div className="mt-3 grid grid-cols-2 gap-4">
           <SummaryCard label="Total Customers" value={totalCustomers} icon={Users} />
           <SummaryCard label="Birthdays On Record" value={birthdayCount} icon={CalendarHeart} />
           <SummaryCard label="Anniversaries On Record" value={anniversaryCount} icon={HeartHandshake} />
@@ -205,7 +214,7 @@ export default function DashboardPage() {
           <SummaryCard label="Scheduled Campaigns" value={Number(shop?.total_scheduled_campaigns ?? 0)} icon={ClipboardList} />
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           <Button asChild>
             <Link href="/app/qr"><Printer className="h-4 w-4" />Print QR</Link>
           </Button>

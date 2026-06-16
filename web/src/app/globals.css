@@ -40,3 +40,20 @@ textarea {
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+@media (max-width: 360px) {
+  .nav-label-wide {
+    display: none !important;
+  }
+  .nav-label-narrow {
+    display: inline-block !important;
+  }
+}
+@media (min-width: 361px) {
+  .nav-label-wide {
+    display: inline-block !important;
+  }
+  .nav-label-narrow {
+    display: none !important;
+  }
+}
