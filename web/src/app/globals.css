@@ -57,3 +57,35 @@ textarea {
     display: none !important;
   }
 }
+
+@media print {
+  html, body {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  
+  nav,
+  button,
+  section > p,
+  section > h1,
+  section > div:not(#print-qr-card) {
+    display: none !important;
+  }
+
+  main, section {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  #print-qr-card {
+    margin: 2rem auto !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: none !important;
+    max-width: 420px !important;
+    width: 90% !important;
+  }
+}

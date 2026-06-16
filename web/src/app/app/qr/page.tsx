@@ -18,6 +18,12 @@ const displayTypes = [
 
 type DisplayKey = (typeof displayTypes)[number]["key"];
 
+const qrSizes = {
+  counter: 160,
+  table: 130,
+  poster: 180
+} as const;
+
 export default function QrPage() {
   const qrContainerRef = useRef<HTMLDivElement | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
@@ -82,23 +88,23 @@ export default function QrPage() {
 
         <Card 
           id="print-qr-card"
-          className={`mt-6 flex ${activeDisplay.className} flex-col justify-between overflow-hidden rounded-[24px] border border-black/[0.08] p-8 text-center bg-white shadow-lg`}
+          className={`mt-6 flex ${activeDisplay.className} flex-col justify-between overflow-hidden rounded-[24px] border border-black/[0.08] p-6 md:p-8 text-center bg-white shadow-lg`}
         >
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-white shadow-md">
               {shop?.name?.slice(0, 1).toUpperCase() ?? "Z"}
             </div>
-            <h2 className="text-sm font-bold tracking-widest text-primary uppercase">{shop?.name ?? "Your Shop"}</h2>
-            <p className="text-3xl font-black leading-tight text-[#111827]">🎁 Join Our Rewards List</p>
-            <p className="text-[14px] text-[#6B7280] max-w-xs mx-auto leading-relaxed">
+            <h2 className="text-xs md:text-sm font-bold tracking-widest text-primary uppercase">{shop?.name ?? "Your Shop"}</h2>
+            <p className="text-2xl md:text-3xl font-black leading-tight text-[#111827]">🎁 Join Our Rewards List</p>
+            <p className="text-[13px] md:text-[14px] text-[#6B7280] max-w-xs mx-auto leading-relaxed">
               Get birthday wishes, festival offers and exclusive updates.
             </p>
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {registrationUrl ? (
-            <div ref={qrContainerRef} className="mx-auto rounded-2xl bg-white p-4 border border-black/[0.04] shadow-inner">
-              <QRCodeSVG value={registrationUrl} size={200} />
+            <div ref={qrContainerRef} className="mx-auto rounded-2xl bg-white p-3 md:p-4 border border-black/[0.04] shadow-inner">
+              <QRCodeSVG value={registrationUrl} size={qrSizes[display]} />
             </div>
           ) : (
             <div className="space-y-3">
@@ -110,12 +116,12 @@ export default function QrPage() {
           )}
 
           <div>
-            <div className="mx-auto grid max-w-xs grid-cols-3 gap-2 text-[11px] uppercase tracking-wider font-bold text-primary">
+            <div className="mx-auto grid max-w-xs grid-cols-3 gap-2 text-[10px] md:text-[11px] uppercase tracking-wider font-bold text-primary">
               <span>🎁 Wishes</span>
               <span>📣 Offers</span>
               <span>⭐ Rewards</span>
             </div>
-            <p className="mt-4 text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Powered by Zappy</p>
+            <p className="mt-3 md:mt-4 text-[10px] md:text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Powered by Zappy</p>
           </div>
         </Card>
 
