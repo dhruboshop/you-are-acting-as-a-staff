@@ -28,8 +28,8 @@ This guide is the operating path for the mobile-first Zappy web app.
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
-   NEXT_PUBLIC_APP_URL=http://localhost:3001
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
 4. Start the backend:
@@ -47,7 +47,7 @@ This guide is the operating path for the mobile-first Zappy web app.
 6. Open:
 
    ```text
-   http://localhost:3001
+   http://localhost:3000
    ```
 
 ## Supabase
@@ -85,9 +85,11 @@ GOOGLE_CLIENT_ID=
 JWT_SECRET=
 EVOLUTION_API_URL=
 EVOLUTION_API_KEY=
+EVOLUTION_WEBHOOK_SECRET=
 GROQ_API_KEY=
-API_BASE_URL=
-WEB_APP_URL=
+API_BASE_URL=https://api.zappy.rest
+WEB_APP_URL=https://zappy.rest
+FRONTEND_URL=https://www.zappy.rest
 APP_NAME=Zappy
 LOG_LEVEL=info
 ```
@@ -124,8 +126,8 @@ LOG_LEVEL=info
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=
    NEXT_PUBLIC_SUPABASE_ANON_KEY=
-   NEXT_PUBLIC_API_BASE_URL=https://your-render-backend.onrender.com
-   NEXT_PUBLIC_APP_URL=https://your-vercel-domain.vercel.app
+   NEXT_PUBLIC_API_BASE_URL=https://api.zappy.rest
+   NEXT_PUBLIC_APP_URL=https://zappy.rest
    ```
 
 ## PWA Validation

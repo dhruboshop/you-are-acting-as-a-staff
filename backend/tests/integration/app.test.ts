@@ -135,6 +135,21 @@ describe("app", () => {
     expect(response.body.success).toBe(false);
   });
 
+  it("generates customer QR links with the public web app URL", async () => {
+    const shopId = crypto.randomUUID();
+    dbMocks.queryOne
+      .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
+      .mockResolvedValueOnce({ id: shopId, name: "Zappy Demo Shop" });
+
+    const response = await request(createApp())
+      .get(`/api/shops/${shopId}/qr`)
+      .set("Authorization", "Bearer valid-token");
+
+    expect(response.status).toBe(200);
+    expect(response.body.registrationUrl).toBe(`http://localhost:3000/register/${shopId}`);
+    expect(response.body.pngDataUrl).toMatch(/^data:image\/png;base64,/);
+  });
+
   it("creates a WhatsApp connection and returns pairing details", async () => {
     const shopId = crypto.randomUUID();
     dbMocks.queryOne

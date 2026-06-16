@@ -28,6 +28,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     }
     throw new Error("Google session required");
   }
+  if (!env.apiBaseUrl) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is required");
+  }
   const requestUrl = `${env.apiBaseUrl}${path}`;
   const fetchWithToken = (accessToken: string) =>
     fetch(requestUrl, {

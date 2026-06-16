@@ -31,25 +31,33 @@ export default function RegisterPage() {
         onSubmit={async (event) => {
           event.preventDefault();
           setError("");
-          const form = new FormData(event.currentTarget);
-          const response = await fetch(`${env.apiBaseUrl}/api/public/shops/${params.shopId}/customers`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              name: form.get("name"),
-              whatsappNumber: form.get("whatsapp"),
-              birthday: form.get("birthday") || null,
-              anniversary: form.get("anniversary") || null,
-              feedbackRating: form.get("rating") ? Number(form.get("rating")) : null,
-              feedbackText: form.get("feedback") || null,
-              consent: true
-            })
-          });
-          if (!response.ok) {
-            setError("Could not save your registration. Please check the number and try again.");
+          if (!env.apiBaseUrl) {
+            setError("Registration is temporarily unavailable. Please try again later.");
             return;
           }
-          setDone(true);
+          const form = new FormData(event.currentTarget);
+          try {
+            const response = await fetch(`${env.apiBaseUrl}/api/public/shops/${params.shopId}/customers`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                name: form.get("name"),
+                whatsappNumber: form.get("whatsapp"),
+                birthday: form.get("birthday") || null,
+                anniversary: form.get("anniversary") || null,
+                feedbackRating: form.get("rating") ? Number(form.get("rating")) : null,
+                feedbackText: form.get("feedback") || null,
+                consent: true
+              })
+            });
+            if (!response.ok) {
+              setError("Could not save your registration. Please check the number and try again.");
+              return;
+            }
+            setDone(true);
+          } catch {
+            setError("Could not save your registration. Please check the number and try again.");
+          }
         }}
       >
         <Input name="shopId" value={params.shopId} readOnly className="hidden" />

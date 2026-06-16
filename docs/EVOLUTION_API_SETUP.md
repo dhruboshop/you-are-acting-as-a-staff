@@ -15,7 +15,7 @@ Screenshot placeholder: `docs/screenshots/evolution-api-dashboard.png`
 Set:
 
 ```env
-EVOLUTION_API_URL=https://your-evolution-api.example.com
+EVOLUTION_API_URL=https://wa.zappy.rest
 EVOLUTION_API_KEY=your-api-key
 ```
 

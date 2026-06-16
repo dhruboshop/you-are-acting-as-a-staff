@@ -45,10 +45,10 @@ const fallbackForTests = {
 const input = process.env.NODE_ENV === "test" ? { ...fallbackForTests, ...process.env } : process.env;
 export const env = envSchema.parse(input);
 
-export function getPublicApiBaseUrl() {
-  const baseUrl = env.API_BASE_URL ?? env.RENDER_EXTERNAL_URL;
+export function getPublicRegistrationBaseUrl() {
+  const baseUrl = env.WEB_APP_URL ?? env.FRONTEND_URL;
   if (!baseUrl) {
-    throw new Error("API_BASE_URL or RENDER_EXTERNAL_URL is required to generate shop QR links");
+    throw new Error("WEB_APP_URL or FRONTEND_URL is required to generate customer registration links");
   }
   return baseUrl;
 }
