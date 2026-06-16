@@ -5,8 +5,8 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
 
-class LoyaltyPilotApp extends ConsumerWidget {
-  const LoyaltyPilotApp({super.key});
+class ZappyApp extends ConsumerWidget {
+  const ZappyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -14,7 +14,7 @@ class LoyaltyPilotApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'LoyaltyPilot',
+      title: 'Zappy',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.buildTheme(theme),
       routerConfig: router,

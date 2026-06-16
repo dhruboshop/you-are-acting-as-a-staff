@@ -103,6 +103,7 @@ export type Customer = {
   shop_id: string;
   name: string;
   whatsapp_number: string;
+  loyalty_points?: number;
   birthday?: string | null;
   anniversary?: string | null;
   feedback_rating?: number | null;

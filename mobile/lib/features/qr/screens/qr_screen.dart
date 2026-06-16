@@ -49,7 +49,7 @@ class _QrScreenState extends ConsumerState<QrScreen> {
                 onTap: () => context.push(RouteNames.qrFullscreen),
                 child: RepaintBoundary(
                   key: _qrKey,
-                  child: LPQrCard(qrData: data.registrationUrl, businessName: business?.name ?? 'Radha Jewels', tagline: business?.qrTagline ?? '', size: LPQrCardSize.standard, theme: theme),
+                  child: LPQrCard(qrData: data.registrationUrl, businessName: business?.name ?? 'Zappy Demo Shop', tagline: business?.qrTagline ?? '', size: LPQrCardSize.standard, theme: theme),
                 ),
               ),
               const SizedBox(height: LPSpacing.px24),
@@ -90,7 +90,7 @@ class _QrScreenState extends ConsumerState<QrScreen> {
   Future<void> _shareQr() async {
     final bytes = await _capture();
     if (bytes == null) return;
-    final file = File('${(await getTemporaryDirectory()).path}/loyaltypilot_qr.png');
+    final file = File('${(await getTemporaryDirectory()).path}/zappy_qr.png');
     await file.writeAsBytes(bytes);
     await Share.shareXFiles([XFile(file.path)], text: 'Register with my business');
   }

@@ -1,6 +1,6 @@
 export const demoShop = {
   id: "demo-shop",
-  name: "Radha Jewels",
+  name: "Zappy Demo Shop",
   phone: "+919876543210",
   address: "Mumbai",
   settings: { theme: "luxury", whatsapp_connected: false },

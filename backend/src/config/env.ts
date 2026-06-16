@@ -23,7 +23,7 @@ const envSchema = z.object({
   WEB_APP_URL: optionalString(z.string().url()),
   FRONTEND_URL: optionalString(z.string().url()),
   RENDER_EXTERNAL_URL: optionalString(z.string().url()),
-  APP_NAME: z.string().min(1).default("Retail Loyalty"),
+  APP_NAME: z.string().min(1).default("Zappy"),
   LOG_LEVEL: z.string().default("info")
 });
 

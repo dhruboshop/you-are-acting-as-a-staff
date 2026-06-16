@@ -95,7 +95,7 @@ class _BusinessSetupScreenState extends ConsumerState<BusinessSetupScreen> {
         const SizedBox(height: LPSpacing.px8),
         const Text('We use this to customize your experience.', style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: LPSpacing.px32),
-        TextField(controller: _name, decoration: const InputDecoration(labelText: 'Business Name', hintText: 'e.g. Radha Jewels')),
+        TextField(controller: _name, decoration: const InputDecoration(labelText: 'Business Name', hintText: 'e.g. Zappy Demo Shop')),
         const SizedBox(height: LPSpacing.fieldGap),
         const Text('Business Type'),
         const SizedBox(height: LPSpacing.px8),

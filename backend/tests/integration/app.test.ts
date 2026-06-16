@@ -83,7 +83,7 @@ describe("app", () => {
       .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
       .mockResolvedValueOnce({
         id: shopId,
-        name: "Radha Jewels",
+        name: "Zappy Demo Shop",
         phone: "+919876543210",
         address: "Kolkata",
         merchant_status: "TRIAL",
@@ -108,7 +108,7 @@ describe("app", () => {
       .mockResolvedValueOnce({ id: "00000000-0000-4000-8000-000000000001" })
       .mockResolvedValueOnce({
         id: shopId,
-        name: "Radha Jewels",
+        name: "Zappy Demo Shop",
         phone: "+919876543210",
         address: "Kolkata",
         merchant_status: "TRIAL",

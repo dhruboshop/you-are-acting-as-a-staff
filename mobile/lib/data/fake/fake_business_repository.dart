@@ -23,7 +23,7 @@ class FakeBusinessRepository implements BusinessRepository {
       city: input.city,
       qrTagline: 'Scan to get exclusive birthday & festival offers',
       themeType: input.themeType,
-      registrationUrl: 'https://app.loyaltypilot.com/r/biz_001',
+      registrationUrl: 'https://app.zappy.local/r/biz_001',
       createdAt: DateTime.now(),
     );
     return _business!;

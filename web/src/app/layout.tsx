@@ -3,12 +3,12 @@ import { RegisterServiceWorker } from "./register-sw";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LoyaltyPilot",
-  description: "WhatsApp-first customer growth platform for local businesses",
+  title: "Zappy",
+  description: "Zappy — Keep customers coming back.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "LoyaltyPilot",
+    title: "Zappy",
     statusBarStyle: "default"
   }
 };

@@ -21,7 +21,7 @@ class QrFullscreenScreen extends ConsumerWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: LPQrCard(qrData: data?.registrationUrl ?? '', businessName: business?.name ?? 'Radha Jewels', tagline: business?.qrTagline ?? '', size: LPQrCardSize.fullscreen, theme: theme),
+            child: LPQrCard(qrData: data?.registrationUrl ?? '', businessName: business?.name ?? 'Zappy Demo Shop', tagline: business?.qrTagline ?? '', size: LPQrCardSize.fullscreen, theme: theme),
           ),
         ),
       ),

@@ -1,6 +1,6 @@
-# LoyaltyPilot PWA Deployment
+# Zappy PWA Deployment
 
-This guide is the operating path for the mobile-first LoyaltyPilot web app.
+This guide is the operating path for the mobile-first Zappy web app.
 
 ## Architecture
 
@@ -88,7 +88,7 @@ EVOLUTION_API_KEY=
 GROQ_API_KEY=
 API_BASE_URL=
 WEB_APP_URL=
-APP_NAME=LoyaltyPilot
+APP_NAME=Zappy
 LOG_LEVEL=info
 ```
 

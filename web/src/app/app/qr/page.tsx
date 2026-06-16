@@ -27,7 +27,7 @@ export default function QrPage() {
 
   async function shareQr() {
     if (registrationUrl && navigator.share) {
-      await navigator.share({ title: shop?.name ?? "LoyaltyPilot", text: `Register with ${shop?.name ?? "our shop"}`, url: registrationUrl });
+      await navigator.share({ title: shop?.name ?? "Zappy", text: `Register with ${shop?.name ?? "our shop"}`, url: registrationUrl });
     }
   }
 
@@ -37,7 +37,7 @@ export default function QrPage() {
         <h1 className="text-3xl font-bold">Your QR Code</h1>
         <p className="mt-2 text-muted-foreground">Place this near the counter so customers can register.</p>
         <Card className="mt-6 p-6 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground">LP</div>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground">Z</div>
           <h2 className="mt-3 text-xl font-bold">{shop?.name ?? "No shop loaded"}</h2>
           {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
           {registrationUrl ? (
@@ -46,7 +46,7 @@ export default function QrPage() {
                 <QRCodeSVG value={registrationUrl} size={230} />
               </div>
               <p className="mt-4 break-all text-xs text-muted-foreground">{registrationUrl}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Scan for birthday and festival offers</p>
+              <p className="mt-2 text-sm text-muted-foreground">Scan to join Zappy rewards</p>
             </>
           ) : (
             <div className="mt-5 space-y-3">

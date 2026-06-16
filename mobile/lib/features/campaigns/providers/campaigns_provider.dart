@@ -81,7 +81,7 @@ class FestivalCampaignState {
 
 class FestivalCampaignNotifier extends StateNotifier<FestivalCampaignState> {
   FestivalCampaignNotifier() : super(const FestivalCampaignState(recipientCount: 10));
-  void selectFestival(Festival festival) => state = state.copyWith(selectedFestival: festival, message: 'Wishing you a joyful ${festival.name} from Radha Jewels.');
+  void selectFestival(Festival festival) => state = state.copyWith(selectedFestival: festival, message: 'Wishing you a joyful ${festival.name} from Zappy Demo Shop.');
   void updateMessage(String message) => state = state.copyWith(message: message);
 }
 

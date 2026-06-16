@@ -15,13 +15,13 @@ class SeedData {
   static final business = BusinessModel(
     id: 'biz_001',
     ownerId: authUser.id,
-    name: 'Radha Jewels',
+    name: 'Zappy Demo Shop',
     category: BusinessCategory.jewelry,
     phone: '+919876543210',
     city: 'Mumbai',
     qrTagline: 'Scan to get exclusive birthday & festival offers',
     themeType: BusinessThemeType.luxury,
-    registrationUrl: 'https://app.loyaltypilot.com/r/biz_001',
+    registrationUrl: 'https://app.zappy.local/r/biz_001',
     createdAt: DateTime(2024, 1, 15),
   );
 
@@ -48,7 +48,7 @@ class SeedData {
   );
 
   static const qrData = QrData(
-    registrationUrl: 'https://app.loyaltypilot.com/r/biz_001',
+    registrationUrl: 'https://app.zappy.local/r/biz_001',
     totalScans: 312,
     scansThisWeek: 28,
   );

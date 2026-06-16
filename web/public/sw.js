@@ -1,4 +1,4 @@
-const CACHE = "loyaltypilot-v1";
+const CACHE = "zappy-v1";
 const APP_SHELL = ["/login", "/manifest.webmanifest", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {

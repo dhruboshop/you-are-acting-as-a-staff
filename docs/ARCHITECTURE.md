@@ -1,6 +1,6 @@
 # Architecture
 
-Retail Loyalty is a low-cost SaaS for 20-50 local shops.
+Zappy is a low-cost SaaS for 20-50 local shops.
 
 ## Runtime
 
