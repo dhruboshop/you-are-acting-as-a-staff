@@ -1,13 +1,37 @@
 "use client";
 
-import { Bot, CalendarHeart, Gift, HeartHandshake, MessageCircle } from "lucide-react";
+import { CalendarHeart, Gift, HeartHandshake, MessageCircle, Users, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getShops, updateShop, type Shop } from "@/lib/api";
 
-type AutomationKey = "birthday" | "anniversary" | "festival" | "welcome";
+type AutomationKey = "birthday" | "anniversary" | "festival" | "welcome" | "winback";
+
+const upcomingFestivalsList = [
+  { name: "Independence Day", date: new Date("2026-08-15") },
+  { name: "Raksha Bandhan", date: new Date("2026-08-28") },
+  { name: "Ganesh Chaturthi", date: new Date("2026-09-15") },
+  { name: "Dussehra", date: new Date("2026-10-20") },
+  { name: "Diwali", date: new Date("2026-11-08") },
+  { name: "Christmas", date: new Date("2026-12-25") },
+  { name: "Republic Day", date: new Date("2027-01-26") },
+  { name: "Holi", date: new Date("2027-03-03") }
+];
+
+function getNextFestival() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  for (const festival of upcomingFestivalsList) {
+    if (festival.date >= now) {
+      const diffTime = festival.date.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return { name: festival.name, daysAway: diffDays };
+    }
+  }
+  return { name: "Independence Day", daysAway: 60 };
+}
 
 const automations: Array<{
   key: AutomationKey;
@@ -16,7 +40,7 @@ const automations: Array<{
   sendTime: string;
   approval: string;
   preview: string;
-  icon: typeof Bot;
+  icon: LucideIcon;
 }> = [
   {
     key: "birthday",
@@ -53,8 +77,40 @@ const automations: Array<{
     approval: "Saved as your welcome greeting setup",
     preview: "Welcome to {shop} rewards, {name}.",
     icon: MessageCircle
+  },
+  {
+    key: "winback",
+    title: "Customer Re-engagement",
+    trigger: "Manual launch or re-engagement setup",
+    sendTime: "Scheduled or manual approval",
+    approval: "Enables messaging customers who joined through the QR. Zero visit tracking.",
+    preview: "Hi {name}, we miss you at {shop}! Hope to see you soon.",
+    icon: Users
   }
 ];
+
+const successMessages: Record<AutomationKey, { enabled: string; disabled: string }> = {
+  birthday: {
+    enabled: "Birthday greetings are now active.",
+    disabled: "Birthday greetings have been paused."
+  },
+  anniversary: {
+    enabled: "Anniversary greetings are now active.",
+    disabled: "Anniversary greetings have been paused."
+  },
+  festival: {
+    enabled: "Festival reminder is ready.",
+    disabled: "Festival drafts have been paused."
+  },
+  welcome: {
+    enabled: "Welcome message is now active.",
+    disabled: "Welcome message has been paused."
+  },
+  winback: {
+    enabled: "Customer Re-engagement is now active.",
+    disabled: "Customer Re-engagement has been paused."
+  }
+};
 
 function readAutomationSettings(shop: Shop | null): Record<AutomationKey, boolean> {
   const settings = shop?.settings ?? {};
@@ -63,13 +119,14 @@ function readAutomationSettings(shop: Shop | null): Record<AutomationKey, boolea
     birthday: automationSettings.birthday ?? false,
     anniversary: automationSettings.anniversary ?? false,
     festival: automationSettings.festival ?? false,
-    welcome: automationSettings.welcome ?? false
+    welcome: automationSettings.welcome ?? false,
+    winback: automationSettings.winback ?? false
   };
 }
 
 export default function AutomationsPage() {
   const [shop, setShop] = useState<Shop | null>(null);
-  const [settings, setSettings] = useState<Record<AutomationKey, boolean>>({ birthday: false, anniversary: false, festival: false, welcome: false });
+  const [settings, setSettings] = useState<Record<AutomationKey, boolean>>({ birthday: false, anniversary: false, festival: false, welcome: false, winback: false });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +157,8 @@ export default function AutomationsPage() {
         }
       });
       setShop(updated.shop);
-      setSuccess("Automation setup saved.");
+      const isNowEnabled = next[key];
+      setSuccess(isNowEnabled ? successMessages[key].enabled : successMessages[key].disabled);
     } catch (caught) {
       setSettings(readAutomationSettings(shop));
       setError(caught instanceof Error ? caught.message : "Could not save automation");
@@ -146,7 +204,8 @@ export default function AutomationsPage() {
                           {automation.key === "birthday" ? "Sends on the customer's birthday" :
                            automation.key === "anniversary" ? "Sends on the customer's anniversary" :
                            automation.key === "festival" ? "Creates a draft for your approval" :
-                           "Sends when a new customer joins"}
+                           automation.key === "welcome" ? "Sends when a new customer joins" :
+                           "Create a WhatsApp campaign for customers who joined through your QR."}
                         </p>
                       </div>
                       <button
@@ -159,14 +218,43 @@ export default function AutomationsPage() {
                         <span className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${enabled ? "translate-x-6" : "translate-x-0"}`} />
                       </button>
                     </div>
-                    <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-                      <p>Trigger: {automation.trigger}</p>
-                      <p>Send Time: {automation.sendTime}</p>
-                      <p>Reward: Greeting Only</p>
-                      <p>{automation.approval}</p>
+                    <div className="mt-3 space-y-1 text-sm text-[#4B5563] text-left">
+                      <p>
+                        <strong className="font-semibold text-[#111827]">Audience:</strong>{" "}
+                        {automation.key === "birthday"
+                          ? "Customers with a birthday recorded"
+                          : automation.key === "anniversary"
+                          ? "Customers with an anniversary recorded (only if anniversary exists)"
+                          : automation.key === "festival"
+                          ? "All Customers"
+                          : automation.key === "welcome"
+                          ? "New registration"
+                          : "All registered customers"}
+                      </p>
+                      <p>
+                        <strong className="font-semibold text-[#111827]">Trigger:</strong>{" "}
+                        {automation.key === "birthday"
+                          ? "Customer birthday"
+                          : automation.key === "anniversary"
+                          ? "Customer anniversary"
+                          : automation.trigger}
+                      </p>
+                      <p>
+                        <strong className="font-semibold text-[#111827]">Send Time:</strong> {automation.sendTime}
+                      </p>
+                      <p>
+                        <strong className="font-semibold text-[#111827]">Reward:</strong> Greeting Only
+                      </p>
+                      {automation.key === "festival" ? (
+                        <p className="text-amber-600 font-semibold mt-2 flex items-center gap-1">
+                          ⚠️ Approval required before send ({getNextFestival().name} is {getNextFestival().daysAway} days away)
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-[13px] text-[#6B7280] italic">{automation.approval}</p>
+                      )}
                     </div>
                     <div 
-                      className="mt-3 bg-white border border-[#E5E7EB] text-[14px] text-[#374151]"
+                      className="mt-3 bg-[#F9FAFB] border border-[#E5E7EB] text-[14px] text-[#374151] text-left"
                       style={{
                         borderRadius: "12px 12px 12px 0",
                         padding: "12px 16px",

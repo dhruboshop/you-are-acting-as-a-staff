@@ -29,10 +29,11 @@ function toStoredDate(day: FormDataEntryValue | null, month: FormDataEntryValue 
   return `2000-${String(monthNumber).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
 }
 
-function DateMonthFields({ prefix, label }: { prefix: string; label: string }) {
+function DateMonthFields({ prefix, label, helpText }: { prefix: string; label: string; helpText?: string }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium">{label}</p>
+      <p className="mb-1 text-sm font-medium text-[#111827]">{label}</p>
+      {helpText ? <p className="mb-2 text-[13px] text-[#6B7280]">{helpText}</p> : null}
       <div className="grid grid-cols-[0.8fr_1.2fr] gap-3">
         <select name={`${prefix}Day`} className="h-12 rounded-xl border border-input bg-card px-3 text-base outline-none focus:ring-2 focus:ring-ring">
           <option value="">Day</option>
@@ -70,18 +71,18 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-background px-5 text-center">
+      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center bg-background px-5 text-center pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <CheckCircle2 className="h-24 w-24 text-[#10B981]" />
-        <h1 className="mt-6 text-3xl font-bold">You are registered</h1>
+        <h1 className="mt-6 text-3xl font-bold text-[#111827]">You are registered</h1>
         <p className="mt-2 text-muted-foreground">You will receive wishes, offers, and rewards from {shopName} on WhatsApp.</p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-background px-5 py-8">
-      <h1 className="text-3xl font-bold">Join {shopName} Rewards</h1>
-      <p className="mt-2 text-muted-foreground">Receive birthday wishes, festival offers, special greetings, and customer rewards on WhatsApp.</p>
+    <main className="mx-auto min-h-screen max-w-md bg-background px-5 pt-[calc(env(safe-area-inset-top)+2rem)] pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <h1 className="text-3xl font-bold text-[#111827]">Join {shopName} Rewards</h1>
+      <p className="mt-2 text-sm text-[#6B7280]">Receive birthday wishes, festival offers, special greetings, and customer rewards on WhatsApp.</p>
       <form
         className="mt-8 space-y-5"
         onSubmit={async (event) => {
@@ -119,29 +120,51 @@ export default function RegisterPage() {
           }
         }}
       >
-        <Input name="name" placeholder="Name" required />
-        <div className="relative flex items-center">
-          <span className="absolute left-3 text-muted-foreground font-semibold text-base border-r pr-2 border-border">+91</span>
-          <Input 
-            name="whatsapp" 
-            placeholder="10-digit WhatsApp number" 
-            inputMode="tel" 
-            required 
-            className="pl-16"
-            pattern="[6-9][0-9]{9}"
-            title="Please enter a valid 10-digit Indian mobile number"
-          />
+        <div>
+          <label htmlFor="name" className="block mb-2 text-sm font-medium text-[#111827]">Full Name</label>
+          <Input id="name" name="name" placeholder="Enter your full name" required />
         </div>
-        <DateMonthFields prefix="birthday" label="Birthday (optional)" />
-        <label className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-sm font-medium cursor-pointer min-h-[44px]">
-          <input type="checkbox" checked={showAnniversary} onChange={(event) => setShowAnniversary(event.target.checked)} className="h-5 w-5 rounded text-primary focus:ring-primary" />
-          Add Anniversary (optional)
-        </label>
-        {showAnniversary ? <DateMonthFields prefix="anniversary" label="Anniversary" /> : null}
-        <label className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer select-none py-1 min-h-[44px]">
+        <div>
+          <label htmlFor="whatsapp" className="block mb-2 text-sm font-medium text-[#111827]">WhatsApp Number</label>
+          <div className="relative flex items-center">
+            <span className="absolute left-3 text-muted-foreground font-semibold text-base border-r pr-2 border-border">+91</span>
+            <Input 
+              id="whatsapp"
+              name="whatsapp" 
+              placeholder="10-digit WhatsApp number" 
+              inputMode="tel" 
+              required 
+              className="pl-16"
+              pattern="[6-9][0-9]{9}"
+              title="Please enter a valid 10-digit Indian mobile number"
+            />
+          </div>
+        </div>
+        <DateMonthFields prefix="birthday" label="Birthday (Optional)" helpText="Receive birthday wishes and rewards." />
+        {!showAnniversary ? (
+          <button 
+            type="button" 
+            onClick={() => setShowAnniversary(true)}
+            className="w-full h-12 rounded-xl border border-dashed border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 transition-colors flex items-center justify-center gap-2"
+          >
+            + Add Anniversary (Optional)
+          </button>
+        ) : (
+          <div className="space-y-2">
+            <DateMonthFields prefix="anniversary" label="Anniversary (Optional)" />
+            <button 
+              type="button" 
+              onClick={() => setShowAnniversary(false)}
+              className="text-[13px] text-[#6B7280] hover:underline"
+            >
+              Remove Anniversary
+            </button>
+          </div>
+        )}
+        <label className="flex items-start gap-3 text-sm text-[#374151] cursor-pointer select-none py-1 min-h-[44px]">
           <input type="checkbox" required className="mt-1 h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary shrink-0" />
           <span>
-            I consent to <strong>{shopName}</strong> saving my name and dates to send me birthday wishes, anniversary greetings, and festival offers on WhatsApp. I understand I can opt-out at any time by replying STOP.
+            I agree to receive occasional WhatsApp greetings, offers and reminders from this business.
           </span>
         </label>
         <p className="-mt-2 text-[13px] text-[#6B7280] leading-relaxed">

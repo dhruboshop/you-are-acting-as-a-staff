@@ -72,6 +72,31 @@ export default function CampaignsPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedDate = localStorage.getItem("zappy_campaign_scheduled_date");
+      const storedTime = localStorage.getItem("zappy_campaign_scheduled_time");
+      if (storedDate) setScheduledDate(storedDate);
+      if (storedTime) setScheduledTime(storedTime);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (scheduledDate) {
+      localStorage.setItem("zappy_campaign_scheduled_date", scheduledDate);
+    } else {
+      localStorage.removeItem("zappy_campaign_scheduled_date");
+    }
+  }, [scheduledDate]);
+
+  useEffect(() => {
+    if (scheduledTime) {
+      localStorage.setItem("zappy_campaign_scheduled_time", scheduledTime);
+    } else {
+      localStorage.removeItem("zappy_campaign_scheduled_time");
+    }
+  }, [scheduledTime]);
+
+  useEffect(() => {
     setMessage(defaultMessage(type, reward, festival));
   }, [type, reward, festival]);
 
@@ -123,9 +148,9 @@ export default function CampaignsPage() {
       });
       if (schedule === "Send Now") {
         const result = await sendCampaign(created.campaign.id);
-        setSuccess(`Campaign sent to ${result.sent} customer${result.sent === 1 ? "" : "s"}. Failed: ${result.failed}.`);
+        setSuccess(`Your WhatsApp message is ready and sent to ${result.sent} customer${result.sent === 1 ? "" : "s"}.`);
       } else {
-        setSuccess("Campaign scheduled. Festival campaigns and scheduled sends stay approval-first.");
+        setSuccess("Your scheduled WhatsApp campaign is ready.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not approve campaign");
@@ -252,31 +277,46 @@ export default function CampaignsPage() {
                 ))}
               </div>
               {schedule === "Schedule" ? (
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <Input type="date" value={scheduledDate} onChange={(event) => setScheduledDate(event.target.value)} />
-                  <Input type="time" value={scheduledTime} onChange={(event) => setScheduledTime(event.target.value)} />
+                <div className="mt-4 space-y-2 text-left">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input type="date" value={scheduledDate} onChange={(event) => setScheduledDate(event.target.value)} />
+                    <Input type="time" value={scheduledTime} onChange={(event) => setScheduledTime(event.target.value)} />
+                  </div>
+                  <p className="text-[12px] text-[#6B7280]">
+                    Scheduled in <strong>India Standard Time (IST - UTC+5:30)</strong>
+                  </p>
                 </div>
               ) : null}
-              <div className="mt-4 rounded-[12px] bg-[#F9FAFB] p-4 border border-[#E5E7EB] text-left space-y-3">
+              <div className="mt-4 rounded-[20px] bg-[#F9FAFB] p-5 border border-[#E5E7EB] text-left space-y-4 shadow-sm">
                 <div>
-                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">Who receives it</p>
+                  <p className="text-[11px] uppercase tracking-wider text-[#6B7280] font-bold">Who receives it</p>
                   <p className="mt-1 text-[15px] font-medium text-[#111827]">
                     {recipientCount} {type.toLowerCase()} customer{recipientCount === 1 ? "" : "s"}
                   </p>
                 </div>
                 <hr className="border-t border-[#E5E7EB]" />
                 <div>
-                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">What they get</p>
+                  <p className="text-[11px] uppercase tracking-wider text-[#6B7280] font-bold">What they get</p>
                   <p className="mt-1 text-[15px] font-medium text-[#111827]">
-                    {reward === "Greeting Only" ? "A greeting message" : `Greeting & ${reward}`}
+                    {reward === "Greeting Only" ? "Greeting Only" : `Greeting & ${reward}`}
                   </p>
                 </div>
                 <hr className="border-t border-[#E5E7EB]" />
                 <div>
-                  <p className="text-[12px] uppercase tracking-wider text-[#6B7280]">When it sends</p>
+                  <p className="text-[11px] uppercase tracking-wider text-[#6B7280] font-bold">When it sends</p>
                   <p className="mt-1 text-[15px] font-medium text-[#111827]">
-                    {schedule === "Send Now" ? "After your approval" : `Scheduled for ${scheduledDate} at ${scheduledTime}`}
+                    {schedule === "Send Now" ? "After your approval (Send Now)" : `Scheduled for ${scheduledDate} at ${scheduledTime} (IST)`}
                   </p>
+                </div>
+                <hr className="border-t border-[#E5E7EB]" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-[#6B7280] font-bold mb-2">Message Preview</p>
+                  <div className="relative rounded-2xl bg-[#E2F9D3] border border-[#d1ebc4] p-3 text-sm text-[#303030] shadow-sm max-w-[280px]">
+                    <p className="whitespace-pre-wrap pr-10">{preview}</p>
+                    <span className="absolute bottom-1 right-2 text-[9px] text-[#808080]">
+                      {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
                 </div>
               </div>
             </>

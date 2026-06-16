@@ -41,7 +41,7 @@ textarea {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .nav-label-wide {
     display: none !important;
   }
@@ -49,7 +49,7 @@ textarea {
     display: inline-block !important;
   }
 }
-@media (min-width: 361px) {
+@media (min-width: 381px) {
   .nav-label-wide {
     display: inline-block !important;
   }

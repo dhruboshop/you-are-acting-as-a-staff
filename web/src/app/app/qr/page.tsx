@@ -13,7 +13,7 @@ import { env } from "@/lib/env";
 const displayTypes = [
   { key: "counter", label: "Counter Display", className: "aspect-[4/5]" },
   { key: "table", label: "Table Display", className: "aspect-square" },
-  { key: "poster", label: "Poster Version", className: "aspect-[3/4]" }
+  { key: "poster", label: "Poster Display", className: "aspect-[3/4]" }
 ] as const;
 
 type DisplayKey = (typeof displayTypes)[number]["key"];
@@ -84,12 +84,15 @@ export default function QrPage() {
           id="print-qr-card"
           className={`mt-6 flex ${activeDisplay.className} flex-col justify-between overflow-hidden rounded-[24px] border border-black/[0.08] p-8 text-center bg-white shadow-lg`}
         >
-          <div>
+          <div className="space-y-3">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-bold text-white shadow-md">
               {shop?.name?.slice(0, 1).toUpperCase() ?? "Z"}
             </div>
-            <h2 className="mt-4 text-xl font-bold text-[#111827]">{shop?.name ?? "Your Shop"}</h2>
-            <p className="mt-2 text-2xl font-black leading-tight text-[#111827]">Scan & Join Rewards</p>
+            <h2 className="text-sm font-bold tracking-widest text-primary uppercase">{shop?.name ?? "Your Shop"}</h2>
+            <p className="text-3xl font-black leading-tight text-[#111827]">🎁 Join Our Rewards List</p>
+            <p className="text-[14px] text-[#6B7280] max-w-xs mx-auto leading-relaxed">
+              Get birthday wishes, festival offers and exclusive updates.
+            </p>
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
