@@ -1,7 +1,7 @@
 {
   "name": "Zappy",
   "short_name": "Zappy",
-  "description": "Zappy — Keep customers coming back.",
+  "description": "Zappy — Remember Every Customer Moment.",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",

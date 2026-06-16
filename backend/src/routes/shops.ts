@@ -15,6 +15,8 @@ router.get("/", asyncHandler(async (req, res) => {
     `select s.*,
       (select count(*)::int from customers c where c.shop_id = s.id) as total_customers,
       (select count(*)::int from campaigns ca where ca.shop_id = s.id) as total_campaigns,
+      (select count(*)::int from campaigns ca where ca.shop_id = s.id and ca.status in ('sent', 'partial')) as total_sent_campaigns,
+      (select count(*)::int from campaigns ca where ca.shop_id = s.id and ca.status = 'scheduled') as total_scheduled_campaigns,
       (select count(*)::int from customers c where c.shop_id = s.id and c.loyalty_points > 0) as total_loyalty_members
      from shops s
      where s.owner_user_id = $1 and s.deleted_at is null
@@ -41,6 +43,8 @@ router.get("/:id", asyncHandler(async (req, res) => {
     `select s.*,
       (select count(*)::int from customers c where c.shop_id = s.id) as total_customers,
       (select count(*)::int from campaigns ca where ca.shop_id = s.id) as total_campaigns,
+      (select count(*)::int from campaigns ca where ca.shop_id = s.id and ca.status in ('sent', 'partial')) as total_sent_campaigns,
+      (select count(*)::int from campaigns ca where ca.shop_id = s.id and ca.status = 'scheduled') as total_scheduled_campaigns,
       (select count(*)::int from customers c where c.shop_id = s.id and c.loyalty_points > 0) as total_loyalty_members
      from shops s where s.id = $1 and s.owner_user_id = $2 and s.deleted_at is null`,
     [id, req.ownerUserId]

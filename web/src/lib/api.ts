@@ -98,6 +98,8 @@ export type Shop = {
   trial_ends_at?: string | null;
   total_customers?: number;
   total_campaigns?: number;
+  total_sent_campaigns?: number;
+  total_scheduled_campaigns?: number;
   total_loyalty_members?: number;
 };
 
@@ -251,6 +253,7 @@ export async function createCampaign(input: {
   title: string;
   message: string;
   target?: "all" | "loyalty_members";
+  scheduledAt?: string | null;
 }) {
   return apiFetch<{ campaign: Campaign }>("/api/campaigns", {
     method: "POST",

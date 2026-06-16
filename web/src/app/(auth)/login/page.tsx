@@ -62,7 +62,7 @@ export default function LoginPage() {
         </div>
         <h1 className="text-center text-4xl font-bold tracking-tight">Zappy</h1>
         <p className="mt-3 text-center text-lg text-muted-foreground">
-          Zappy — Keep customers coming back.
+          Zappy — Remember Every Customer Moment.
         </p>
         <Card className="mt-8 p-4">
           <div className="grid grid-cols-3 gap-2 text-center text-xs text-muted-foreground">

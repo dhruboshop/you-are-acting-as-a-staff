@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Zappy",
-  description: "Zappy — Keep customers coming back.",
+  description: "Zappy — Remember Every Customer Moment.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

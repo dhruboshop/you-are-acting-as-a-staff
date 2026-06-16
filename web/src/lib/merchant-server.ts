@@ -8,6 +8,8 @@ export type MerchantShop = {
   settings?: Record<string, unknown>;
   total_customers?: number;
   total_campaigns?: number;
+  total_sent_campaigns?: number;
+  total_scheduled_campaigns?: number;
   total_loyalty_members?: number;
 };
 
@@ -41,6 +43,8 @@ export async function fetchMerchantShops(supabase: SupabaseClient, session: Sess
     ...shop,
     total_customers: 0,
     total_campaigns: 0,
+    total_sent_campaigns: 0,
+    total_scheduled_campaigns: 0,
     total_loyalty_members: 0
   }));
 }

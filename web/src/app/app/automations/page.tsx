@@ -1,18 +1,59 @@
 "use client";
 
-import { Bot, CalendarHeart, Gift, RefreshCw, Sparkles } from "lucide-react";
+import { Bot, CalendarHeart, Gift, HeartHandshake, MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/app/app-shell";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getShops, updateShop, type Shop } from "@/lib/api";
 
-type AutomationKey = "birthday" | "anniversary" | "festival" | "winback";
+type AutomationKey = "birthday" | "anniversary" | "festival" | "welcome";
 
-const automations: Array<{ key: AutomationKey; title: string; description: string; icon: typeof Bot }> = [
-  { key: "birthday", title: "Birthday Automation", description: "Send birthday wishes when WhatsApp is connected.", icon: CalendarHeart },
-  { key: "anniversary", title: "Anniversary Automation", description: "Greet couples and families on important dates.", icon: Sparkles },
-  { key: "festival", title: "Festival Reminder Automation", description: "Prepare approval-first drafts before festivals.", icon: Gift },
-  { key: "winback", title: "Win Back Automation", description: "Remind inactive customers to visit again.", icon: RefreshCw }
+const automations: Array<{
+  key: AutomationKey;
+  title: string;
+  trigger: string;
+  sendTime: string;
+  approval: string;
+  preview: string;
+  icon: typeof Bot;
+}> = [
+  {
+    key: "birthday",
+    title: "Birthday Wishes",
+    trigger: "Customer Birthday",
+    sendTime: "09:00 AM",
+    approval: "Saved as your birthday greeting setup",
+    preview: "Happy birthday, {name}! Warm wishes from {shop}.",
+    icon: CalendarHeart
+  },
+  {
+    key: "anniversary",
+    title: "Anniversary Greetings",
+    trigger: "Customer Anniversary",
+    sendTime: "09:00 AM",
+    approval: "Saved as your anniversary greeting setup",
+    preview: "Happy anniversary, {name}! {shop} sends warm wishes.",
+    icon: HeartHandshake
+  },
+  {
+    key: "festival",
+    title: "Festival Drafts",
+    trigger: "Upcoming Indian Festival",
+    sendTime: "Create draft only",
+    approval: "Approval required before any festival send",
+    preview: "{shop} wishes you a joyful festival season.",
+    icon: Gift
+  },
+  {
+    key: "welcome",
+    title: "Welcome Message",
+    trigger: "New Customer Joins",
+    sendTime: "Immediately after registration",
+    approval: "Saved as your welcome greeting setup",
+    preview: "Welcome to {shop} rewards, {name}.",
+    icon: MessageCircle
+  }
 ];
 
 function readAutomationSettings(shop: Shop | null): Record<AutomationKey, boolean> {
@@ -22,13 +63,13 @@ function readAutomationSettings(shop: Shop | null): Record<AutomationKey, boolea
     birthday: automationSettings.birthday ?? false,
     anniversary: automationSettings.anniversary ?? false,
     festival: automationSettings.festival ?? false,
-    winback: automationSettings.winback ?? false
+    welcome: automationSettings.welcome ?? false
   };
 }
 
 export default function AutomationsPage() {
   const [shop, setShop] = useState<Shop | null>(null);
-  const [settings, setSettings] = useState<Record<AutomationKey, boolean>>({ birthday: false, anniversary: false, festival: false, winback: false });
+  const [settings, setSettings] = useState<Record<AutomationKey, boolean>>({ birthday: false, anniversary: false, festival: false, welcome: false });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -59,7 +100,7 @@ export default function AutomationsPage() {
         }
       });
       setShop(updated.shop);
-      setSuccess("Automation settings saved.");
+      setSuccess("Automation setup saved.");
     } catch (caught) {
       setSettings(readAutomationSettings(shop));
       setError(caught instanceof Error ? caught.message : "Could not save automation");
@@ -71,45 +112,66 @@ export default function AutomationsPage() {
   return (
     <AppShell active="Auto">
       <section className="px-5 py-6">
-        <p className="text-sm font-semibold text-primary">Zappy assistant</p>
+        <p className="text-sm font-semibold text-primary">Remember Every Customer Moment</p>
         <h1 className="mt-1 text-3xl font-bold">Automations</h1>
-        <p className="mt-2 text-muted-foreground">Simple reminders that stay safe when WhatsApp, Groq, or Render is unavailable.</p>
+        <p className="mt-2 text-muted-foreground">Set up simple customer greetings. Festival campaigns always stay as drafts until you approve them.</p>
         <Card className="mt-5 bg-primary p-5 text-primary-foreground">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
               <Bot className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{enabledCount}/4 active</p>
-              <p className="text-sm opacity-85">No background workers. Zappy saves your choices and degrades safely.</p>
+              <p className="text-2xl font-bold">{enabledCount}/4 setups saved</p>
+              <p className="text-sm opacity-85">Zappy only uses saved customer dates and WhatsApp status.</p>
             </div>
           </div>
         </Card>
+
+        {!enabledCount ? (
+          <Card className="mt-4 p-4">
+            <h2 className="font-semibold">No automation setup saved</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Set up birthday wishes so customers feel remembered.</p>
+            <Button className="mt-4 w-full" onClick={() => void toggle("birthday")} disabled={isSaving || !shop}>Save Birthday Setup</Button>
+          </Card>
+        ) : null}
+
         {error ? <Card className="mt-4 border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">{error}</Card> : null}
         {success ? <Card className="mt-4 border-[#10B981]/30 bg-[#10B981]/10 p-4 text-sm text-[#047857]">{success}</Card> : null}
+
         <div className="mt-5 space-y-3">
           {automations.map((automation) => {
             const Icon = automation.icon;
             const enabled = settings[automation.key];
             return (
               <Card key={automation.key} className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{automation.title}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{automation.description}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{automation.title}</p>
+                        <p className="mt-1 text-xs font-semibold text-primary">{enabled ? "Setup saved" : "Not set"}</p>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={isSaving || !shop}
+                        onClick={() => void toggle(automation.key)}
+                        className={`h-8 w-14 rounded-full p-1 transition-colors ${enabled ? "bg-primary" : "bg-muted"}`}
+                        aria-label={`Save setup for ${automation.title}`}
+                      >
+                        <span className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${enabled ? "translate-x-6" : "translate-x-0"}`} />
+                      </button>
+                    </div>
+                    <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+                      <p>Trigger: {automation.trigger}</p>
+                      <p>Send Time: {automation.sendTime}</p>
+                      <p>Reward: Greeting Only</p>
+                      <p>{automation.approval}</p>
+                    </div>
+                    <Card className="mt-3 bg-muted/50 p-3 text-sm">{automation.preview.replace("{shop}", shop?.name ?? "your shop")}</Card>
                   </div>
-                  <button
-                    type="button"
-                    disabled={isSaving || !shop}
-                    onClick={() => void toggle(automation.key)}
-                    className={`h-8 w-14 rounded-full p-1 transition-colors ${enabled ? "bg-primary" : "bg-muted"}`}
-                    aria-label={`Toggle ${automation.title}`}
-                  >
-                    <span className={`block h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${enabled ? "translate-x-6" : "translate-x-0"}`} />
-                  </button>
                 </div>
               </Card>
             );

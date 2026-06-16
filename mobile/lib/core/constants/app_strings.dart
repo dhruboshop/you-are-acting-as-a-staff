@@ -1,6 +1,6 @@
 class AppStrings {
   static const appName = 'Zappy';
-  static const splashTagline = 'Keep customers coming back';
+  static const splashTagline = 'Remember Every Customer Moment';
   static const welcomeHeadline = 'Turn every visitor into a repeat customer';
   static const welcomeSubtitle = 'Collect customers with QR, remember birthdays, and send timely WhatsApp campaigns.';
   static const getStartedFree = 'Get Started Free';

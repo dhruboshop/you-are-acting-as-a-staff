@@ -80,16 +80,20 @@ router.post("/:id/send", asyncHandler(async (req, res) => {
        where ca.id = $1 and s.owner_user_id = $2`,
       [id, req.ownerUserId]
     );
-    const campaign = campaignResult.rows[0] as { id: string; shop_id: string; shop_name: string; merchant_status: MerchantStatus; message: string; target: string; instance_name?: string; whatsapp_status?: string; retry_count?: number; max_retries?: number } | undefined;
+    const campaign = campaignResult.rows[0] as { id: string; shop_id: string; shop_name: string; merchant_status: MerchantStatus; message: string; target: string; template_key: string; instance_name?: string; whatsapp_status?: string; retry_count?: number; max_retries?: number } | undefined;
     if (!campaign) throw new HttpError(404, "Campaign not found");
     assertCampaignAllowed(campaign.merchant_status);
     if (!campaign.instance_name || !["open", "connected"].includes(campaign.whatsapp_status ?? "")) {
       throw new HttpError(400, "Connect WhatsApp before sending");
     }
 
+    const campaignAudienceFilter =
+      campaign.template_key === "birthday" ? "and birthday is not null" :
+        campaign.template_key === "anniversary" ? "and anniversary is not null" :
+          campaign.target === "loyalty_members" ? "and loyalty_points > 0" : "";
     const customerResult = await client.query(
       `select id, name, whatsapp_number from customers
-       where shop_id = $1 and consent_given = true ${campaign.target === "loyalty_members" ? "and loyalty_points > 0" : ""}
+       where shop_id = $1 and consent_given = true ${campaignAudienceFilter}
        order by created_at asc`,
       [campaign.shop_id]
     );
